@@ -1060,67 +1060,53 @@ function closeAiPanel() {
 // aiAction defined above by Error Handler Agent (with retry + offline error UI)
 
 async function doExplain(poem, poemText, panel) {
-  const prompt = `You are a literary analyst. Here is a Malayalam poem titled "${poem.title}" by Anusree Othayorath:\n\n${poemText}\n\nIn 4-5 sentences, explain: (1) what the poem is about, (2) its central theme or emotion, (3) any key imagery or metaphors. Write in clear, warm English. No bullet points — flowing prose only.`;
+  const prompt = `Analyze this Malayalam poem titled "${poem.title}" by Anusree Othayorath:\n\n${poemText}\n\nWrite 4-5 sentences in warm English covering: what it is about, its central theme or emotion, and any notable imagery or metaphors. Prose only, no bullet points, no headers.`;
   const text = await callGemini(prompt);
   if (!text) throw new Error('No response');
   const paras = text.split('\n').filter(p => p.trim()).map(p => `<p>${sanitize(p.trim())}</p>`).join('');
   panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Poem Explained</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><div class="ai-result">${paras}</div></div></div>`;
 }
 
-// 🌐 Translation Agent + 🧪 QA Agent: bulletproof translation
+// 🌐 Translation Agent — robust line-by-line with strict prompt
 async function doTranslate(poem, poemText, panel) {
   const allLines = poem.lines;
   const nonEmpty = allLines.filter(l => l !== '');
   const safeLines = nonEmpty.map(l => l.replace(/[`"\\]/g, ' '));
+  const count = safeLines.length;
 
-  // Strict prompt — no JSON mode needed, just clean output
-  const prompt = `Translate these ${safeLines.length} Malayalam poem lines to English, one per line, poetically. Output ONLY the translated lines in the same order, nothing else, no numbering, no explanations:\n\n${safeLines.join('\n')}`;
+  const prompt = `You are translating a Malayalam poem to English. Translate exactly ${count} lines below, one English line per Malayalam line, preserving poetic feel. Write ONLY the ${count} translated lines, one per line, nothing else:\n\n${safeLines.join('\n')}`;
 
   const raw = await callGemini(prompt);
-
   let translations = null;
 
   if (raw) {
-    // Strategy 1: try JSON parse (in case model wraps in JSON)
+    // Try JSON array first
     try {
       const jsonMatch = raw.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
-        if (Array.isArray(parsed) && parsed.length >= nonEmpty.length * 0.8) {
+        if (Array.isArray(parsed) && parsed.length >= count * 0.8)
           translations = parsed.map(String);
-        }
       }
     } catch {}
 
-    // Strategy 2: plain line-by-line split (primary path)
+    // Fallback: line-by-line split
     if (!translations) {
-      const lines = raw
-        .split('\n')
+      const lines = raw.split('\n')
         .map(l => l.trim())
         .filter(l => l.length > 0)
-        // Remove any numbering like "1." "1)" prefix
-        .map(l => l.replace(/^\d+[\.\)]\s*/, ''));
-
-      if (lines.length >= nonEmpty.length * 0.8) {
-        translations = lines;
-      }
+        .map(l => l.replace(/^\d+[\.\)\-]\s*/, ''));
+      if (lines.length >= count * 0.7) translations = lines;
     }
   }
 
-  // Fallback
-  if (!translations || !translations.length) {
-    translations = nonEmpty.map(() => '—');
-  }
+  if (!translations || !translations.length) translations = nonEmpty.map(() => '—');
+  while (translations.length < count) translations.push('—');
 
-  // Pad if short
-  while (translations.length < nonEmpty.length) translations.push('—');
-
-  // Rebuild with stanza gaps preserved
   let transIdx = 0;
   const rows = allLines.map(line => {
     if (line === '') return `<div style="height:.8rem"></div>`;
-    const eng = translations[transIdx] || '—';
-    transIdx++;
+    const eng = translations[transIdx++] || '—';
     return `<div class="ai-translation-line">
       <span class="ai-orig">${sanitize(line)}</span>
       <span class="ai-eng">${sanitize(String(eng))}</span>
@@ -1131,7 +1117,7 @@ async function doTranslate(poem, poemText, panel) {
     <div class="ai-panel-header">
       <span class="ai-panel-title">✦ English Translation</span>
       <div style="display:flex;align-items:center;gap:.6rem">
-        <button class="ai-panel-close" onclick="copyTranslation()" title="Copy" style="font-size:.65rem;letter-spacing:.08em;font-family:'Space Grotesk',sans-serif">⎘ Copy</button>
+        <button class="ai-panel-close" onclick="copyTranslation()" style="font-size:.65rem;letter-spacing:.08em;font-family:'Space Grotesk',sans-serif">⎘ Copy</button>
         <button class="ai-panel-close" onclick="closeAiPanel()">✕</button>
       </div>
     </div>
@@ -1173,7 +1159,7 @@ async function sendAsk() {
   loadEl.innerHTML = '<div class="ai-spinner" style="width:12px;height:12px;margin:2px 0"></div>';
   history.appendChild(loadEl);
   history.scrollTop = history.scrollHeight;
-  const prompt = `You are Anusree Othayorath, a soulful Malayalam poet. A reader is asking about your poem "${poem.title}":\n\n${poemText}\n\nReader's question: "${q}"\n\nAnswer as the poet — personal, warm, introspective. 2-3 sentences max.`;
+  const prompt = `You are Anusree Othayorath, a Malayalam poet. A reader asks about your poem "${poem.title}".\n\nPoem:\n${poemText}\n\nQuestion: ${sanitize(q)}\n\nReply warmly and personally as the poet in 2-3 sentences of English.`;
   const ans = await callGemini(prompt);
   // 🔴 Security: sanitize AI output; handle null gracefully
   loadEl.textContent = ans || 'Sorry, I could not respond right now. Please try again.';
@@ -1182,15 +1168,22 @@ async function sendAsk() {
 
 async function doSimilar(poem, panel) {
   const allTitles = poems.filter(p => p.id !== poem.id).map(p => `${p.id}: ${p.title}`).join('\n');
-  const prompt = `Malayalam poem titled "${poem.title}":\n${poem.lines.filter(l=>l!=='').join('\n')}\n\nOther poems list:\n${allTitles}\n\nReturn a JSON array of 2-3 most thematically similar poem IDs. Example: ["id1","id2"]`;
-  const raw = await callGemini(prompt); // no JSON mode
+  const prompt = `Given this Malayalam poem titled "${poem.title}":\n${poem.lines.filter(l=>l!=='').slice(0,4).join('\n')}\n\nFrom these other poems:\n${allTitles}\n\nList the IDs of the 2-3 most thematically similar poems. Reply with ONLY a JSON array like ["id1","id2"] and nothing else.`;
+  const raw = await callGemini(prompt);
   let ids = [];
-  try {
-    const clean = (raw||'').trim().replace(/^```json\s*/i,'').replace(/```\s*$/,'').trim();
-    const match = clean.match(/\[[\s\S]*?\]/);
-    ids = JSON.parse(match ? match[0] : clean);
-    if (!Array.isArray(ids)) ids = [];
-  } catch { ids = []; }
+  if (raw) {
+    try {
+      // Extract first [...] array found anywhere in response
+      const match = raw.match(/\[([^\]]*)\]/);
+      if (match) {
+        ids = JSON.parse(match[0]).filter(id => typeof id === 'string');
+      }
+    } catch {
+      // Try to extract quoted strings manually
+      const found = [...raw.matchAll(/"([a-z][a-z0-9\-]*)"/g)].map(m => m[1]);
+      ids = found.filter(id => poems.find(p => p.id === id));
+    }
+  }
   const similar = ids.map(id => poems.find(p => p.id === id)).filter(Boolean);
   if (!similar.length) {
     panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Similar Poems</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><p class="ai-result">No closely similar poems found yet.</p></div></div>`;
@@ -1200,15 +1193,14 @@ async function doSimilar(poem, panel) {
   panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Similar Poems</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><ul class="similar-list">${items}</ul></div></div>`;
 }
 
-// Auto mood detection when poem opens
 const moodCache = {};
 async function detectMood(poem) {
   if (moodCache[poem.id]) return moodCache[poem.id];
-  const poemText = poem.lines.filter(l => l !== '').join('\n');
-  const prompt = `Read this Malayalam poem titled "${poem.title}":\n${poemText}\n\nReturn ONLY one word that best describes its primary mood. Choose from: joy, sadness, love, nature, resilience, memory`;
+  const preview = poem.lines.filter(l => l !== '').slice(0, 5).join('\n');
+  const prompt = `What is the primary mood of this Malayalam poem titled "${poem.title}"?\n\n${preview}\n\nReply with EXACTLY one word from: joy, sadness, love, nature, resilience, memory`;
   const raw = await callGemini(prompt);
   if (!raw) return 'memory';
-  const cleaned = raw.toLowerCase().trim().replace(/[^a-z]/g,'');
+  const cleaned = raw.toLowerCase().replace(/[^a-z]/g, '');
   const valid = ['joy','sadness','love','nature','resilience','memory'];
   const mood = valid.find(m => cleaned.includes(m)) || 'memory';
   moodCache[poem.id] = mood;
