@@ -745,11 +745,17 @@ window.addEventListener('offline', updateOnlineStatus);
 updateOnlineStatus();
 
 // ── CYCLE 3: Error Handler Agent — Gemini retry ──────────────
-// ⚙️ Engineer Agent: jsonMode removed — preview models don't support responseMimeType
+// 🔴 CRITICAL FIX: Gemini 3.x returns thought parts before answer parts
+// parts[0] may be {thought: true, text: "..."} — must skip those
+// Also set thinking_level MINIMAL to avoid slow/expensive deep thinking
 async function callGeminiWithRetry(prompt, retries = 2) {
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.3 }
+    generationConfig: {
+      temperature: 0.3,
+      // Gemini 3.x: MINIMAL thinking = faster, cheaper, still accurate
+      thinkingConfig: { thinkingBudget: 0 }
+    }
   };
   for (let i = 0; i <= retries; i++) {
     try {
@@ -763,9 +769,12 @@ async function callGeminiWithRetry(prompt, retries = 2) {
         throw new Error(`HTTP ${res.status}: ${err?.error?.message || 'unknown'}`);
       }
       const d = await res.json();
-      const text = d.candidates?.[0]?.content?.parts?.[0]?.text;
+      // 🔴 CRITICAL: skip thought parts, find actual response part
+      const parts = d.candidates?.[0]?.content?.parts || [];
+      const text = parts.find(p => !p.thought && p.text)?.text
+                || parts[parts.length - 1]?.text;
       if (!text) throw new Error('Empty response');
-      return text;
+      return text.trim();
     } catch (e) {
       console.warn(`Gemini attempt ${i + 1} failed:`, e.message);
       if (i === retries) throw e;
@@ -783,8 +792,7 @@ async function callGemini(prompt) {
   }
 }
 
-// Patch aiAction to show retry button on failure
-const _origAiAction = window.aiAction;
+// aiAction with retry UI on failure
 async function aiAction(type) {
   if (activeAiPanel === type) { closeAiPanel(); return; }
   const poem = poems.find(p => p.id === currentPoemId);
@@ -1023,13 +1031,9 @@ function showAbout(){showView('about-view');setNav('about');window.location.hash
 
 // ── Gemini AI ────────────────────────────────────────────────
 const GEMINI_KEY = 'AIzaSyBR4gpF8hNarAtaVMk8g6xrGHMIGolyJq0';
-// 🚀 Performance Agent: upgraded to gemini-3.1-flash-lite-preview
-// 2.5x faster than 2.5-flash, optimized for translation, free tier available
+// gemini-3.1-flash-lite-preview: 2.5x faster, optimized for translation
 const GEMINI_MODEL = 'gemini-3.1-flash-lite-preview';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
-// JSON mode URL — forces structured JSON output, no markdown wrapping
-const GEMINI_URL_JSON = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
-// callGemini defined above with retry logic by Error Handler Agent
 
 // Active AI panel state
 let activeAiPanel = null;
@@ -1171,7 +1175,8 @@ async function sendAsk() {
   history.scrollTop = history.scrollHeight;
   const prompt = `You are Anusree Othayorath, a soulful Malayalam poet. A reader is asking about your poem "${poem.title}":\n\n${poemText}\n\nReader's question: "${q}"\n\nAnswer as the poet — personal, warm, introspective. 2-3 sentences max.`;
   const ans = await callGemini(prompt);
-  loadEl.innerHTML = ans;
+  // 🔴 Security: sanitize AI output; handle null gracefully
+  loadEl.textContent = ans || 'Sorry, I could not respond right now. Please try again.';
   history.scrollTop = history.scrollHeight;
 }
 
