@@ -745,14 +745,11 @@ window.addEventListener('offline', updateOnlineStatus);
 updateOnlineStatus();
 
 // ── CYCLE 3: Error Handler Agent — Gemini retry ──────────────
-// ⚙️ Engineer Agent: jsonMode forces responseMimeType application/json
-async function callGeminiWithRetry(prompt, retries = 2, jsonMode = false) {
+// ⚙️ Engineer Agent: jsonMode removed — preview models don't support responseMimeType
+async function callGeminiWithRetry(prompt, retries = 2) {
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: {
-      temperature: jsonMode ? 0.1 : 0.7,
-      ...(jsonMode ? { responseMimeType: 'application/json' } : {})
-    }
+    generationConfig: { temperature: 0.3 }
   };
   for (let i = 0; i <= retries; i++) {
     try {
@@ -777,10 +774,9 @@ async function callGeminiWithRetry(prompt, retries = 2, jsonMode = false) {
   }
 }
 
-// Override callGemini to use retry version
-async function callGemini(prompt, jsonMode = false) {
+async function callGemini(prompt) {
   try {
-    return await callGeminiWithRetry(prompt, 2, jsonMode);
+    return await callGeminiWithRetry(prompt, 2);
   } catch (e) {
     console.error('Gemini failed:', e.message);
     return null;
@@ -1069,67 +1065,56 @@ async function doExplain(poem, poemText, panel) {
 
 // 🌐 Translation Agent + 🧪 QA Agent: bulletproof translation
 async function doTranslate(poem, poemText, panel) {
-  // Keep stanza structure — preserve empty lines as markers
   const allLines = poem.lines;
   const nonEmpty = allLines.filter(l => l !== '');
-
-  // 🔒 Security Agent: escape poem content before embedding in prompt
   const safeLines = nonEmpty.map(l => l.replace(/[`"\\]/g, ' '));
 
-  // ⚙️ Engineer Agent: use JSON mode for guaranteed parseable output
-  const prompt = `You are a Malayalam-to-English poetry translator. Translate each Malayalam line to English poetically, preserving rhythm and emotion.
+  // Strict prompt — no JSON mode needed, just clean output
+  const prompt = `Translate these ${safeLines.length} Malayalam poem lines to English, one per line, poetically. Output ONLY the translated lines in the same order, nothing else, no numbering, no explanations:\n\n${safeLines.join('\n')}`;
 
-Input lines (JSON array):
-${JSON.stringify(safeLines)}
-
-Return a JSON array of the same length with each element being the English translation of the corresponding Malayalam line. No extra text, no markdown, only valid JSON.`;
+  const raw = await callGemini(prompt);
 
   let translations = null;
 
-  // 🧪 QA Agent: try JSON mode first, fallback to text mode
-  try {
-    const raw = await callGemini(prompt, true); // JSON mode
-    if (raw) {
-      // Multiple parse strategies
-      const clean = raw.trim()
-        .replace(/^```json\s*/i, '').replace(/```\s*$/,'')
-        .replace(/^```\s*/,'').trim();
-      const parsed = JSON.parse(clean);
-      if (Array.isArray(parsed)) translations = parsed;
-    }
-  } catch (e1) {
-    console.warn('JSON mode parse failed, trying text mode:', e1.message);
+  if (raw) {
+    // Strategy 1: try JSON parse (in case model wraps in JSON)
     try {
-      const raw2 = await callGemini(prompt, false); // text fallback
-      if (raw2) {
-        const clean2 = raw2.trim()
-          .replace(/^```json\s*/i, '').replace(/```\s*$/,'')
-          .replace(/^```\s*/,'').trim();
-        // Try extracting JSON array from anywhere in response
-        const match = clean2.match(/\[[\s\S]*\]/);
-        if (match) translations = JSON.parse(match[0]);
+      const jsonMatch = raw.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (Array.isArray(parsed) && parsed.length >= nonEmpty.length * 0.8) {
+          translations = parsed.map(String);
+        }
       }
-    } catch (e2) {
-      console.error('Both translation strategies failed:', e2.message);
+    } catch {}
+
+    // Strategy 2: plain line-by-line split (primary path)
+    if (!translations) {
+      const lines = raw
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l.length > 0)
+        // Remove any numbering like "1." "1)" prefix
+        .map(l => l.replace(/^\d+[\.\)]\s*/, ''));
+
+      if (lines.length >= nonEmpty.length * 0.8) {
+        translations = lines;
+      }
     }
   }
 
-  // 🧪 QA Agent: validate length match
-  if (!translations || translations.length !== nonEmpty.length) {
-    if (translations && translations.length < nonEmpty.length) {
-      // Pad missing entries
-      while (translations.length < nonEmpty.length) translations.push('—');
-    } else {
-      translations = nonEmpty.map(() => '—');
-    }
+  // Fallback
+  if (!translations || !translations.length) {
+    translations = nonEmpty.map(() => '—');
   }
 
-  // 🎨 Designer Agent: rebuild with stanza gaps preserved
+  // Pad if short
+  while (translations.length < nonEmpty.length) translations.push('—');
+
+  // Rebuild with stanza gaps preserved
   let transIdx = 0;
   const rows = allLines.map(line => {
-    if (line === '') {
-      return `<div style="height:.8rem"></div>`;
-    }
+    if (line === '') return `<div style="height:.8rem"></div>`;
     const eng = translations[transIdx] || '—';
     transIdx++;
     return `<div class="ai-translation-line">
@@ -1138,12 +1123,11 @@ Return a JSON array of the same length with each element being the English trans
     </div>`;
   }).join('');
 
-  // 🎨 Designer Agent: improved UI with copy button
   panel.innerHTML = `<div class="ai-panel">
     <div class="ai-panel-header">
       <span class="ai-panel-title">✦ English Translation</span>
       <div style="display:flex;align-items:center;gap:.6rem">
-        <button class="ai-panel-close" onclick="copyTranslation()" title="Copy translation" style="font-size:.65rem;letter-spacing:.08em;font-family:'Space Grotesk',sans-serif">⎘ Copy</button>
+        <button class="ai-panel-close" onclick="copyTranslation()" title="Copy" style="font-size:.65rem;letter-spacing:.08em;font-family:'Space Grotesk',sans-serif">⎘ Copy</button>
         <button class="ai-panel-close" onclick="closeAiPanel()">✕</button>
       </div>
     </div>
@@ -1194,7 +1178,7 @@ async function sendAsk() {
 async function doSimilar(poem, panel) {
   const allTitles = poems.filter(p => p.id !== poem.id).map(p => `${p.id}: ${p.title}`).join('\n');
   const prompt = `Malayalam poem titled "${poem.title}":\n${poem.lines.filter(l=>l!=='').join('\n')}\n\nOther poems list:\n${allTitles}\n\nReturn a JSON array of 2-3 most thematically similar poem IDs. Example: ["id1","id2"]`;
-  const raw = await callGemini(prompt, true); // JSON mode
+  const raw = await callGemini(prompt); // no JSON mode
   let ids = [];
   try {
     const clean = (raw||'').trim().replace(/^```json\s*/i,'').replace(/```\s*$/,'').trim();
