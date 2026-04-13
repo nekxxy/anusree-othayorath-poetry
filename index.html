@@ -301,6 +301,50 @@
 
     .poem-card:hover .poem-arrow { transform: translateX(5px); color: var(--gold); }
 
+    /* Like button */
+    .like-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: none;
+      border: 1px solid rgba(201,151,58,0.2);
+      border-radius: 20px;
+      padding: 0.25rem 0.65rem;
+      color: var(--text-soft);
+      font-size: 0.72rem;
+      cursor: none;
+      transition: all 0.25s ease;
+      font-family: 'Playfair Display', serif;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .like-btn:hover { border-color: rgba(201,151,58,0.5); color: var(--gold); }
+    .like-btn.liked { border-color: rgba(220,80,80,0.4); color: #e05555; background: rgba(220,80,80,0.06); }
+    .like-btn .heart { font-size: 0.85rem; transition: transform 0.2s; line-height: 1; }
+    .like-btn:active .heart { transform: scale(1.4); }
+    .like-btn.anim .heart { animation: heartPop 0.3s ease; }
+
+    .poem-like-wrap {
+      text-align: center;
+      margin-top: 2.5rem;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    .poem-like-wrap.revealed { opacity: 1; }
+    .poem-like-wrap .like-btn {
+      font-size: 0.88rem;
+      padding: 0.5rem 1.4rem;
+      border-radius: 30px;
+    }
+    .poem-like-wrap .like-btn .heart { font-size: 1rem; }
+
+    @keyframes heartPop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.6); }
+      100% { transform: scale(1); }
+    }
+
     /* Poem view */
     .back-btn {
       display: inline-flex;
@@ -537,6 +581,12 @@
       <div class="poem-divider"><div class="poem-divider-dot"></div></div>
       <div class="poem-body" id="pv-body"></div>
       <p class="poem-signature" id="pv-sig">~ Anusree Othayorath ~</p>
+      <div class="poem-like-wrap" id="pv-like-wrap">
+        <button class="like-btn" id="pv-like-btn" onclick="handleLike(currentPoemId, this)">
+          <span class="heart">♡</span>
+          <span class="like-count">0</span>
+        </button>
+      </div>
     </div>
 
     <div id="about-view" class="view">
@@ -642,7 +692,82 @@ function setNav(k) {
   document.getElementById('nav-'+k).classList.add('active');
 }
 
-// Render home
+// ── JSONBin likes ──────────────────────────────────────────
+const BIN_URL = 'https://api.jsonbin.io/v3/b/69dd24f336566621a8ac241f';
+const BIN_KEY = '$2a$10$FE5BujtueNVr78jvZZ4pQ.p4mLXQvMv30hJKE.syd0qXBB6tE.uTq';
+const LS_KEY  = 'ao_liked'; // localStorage: array of liked poem IDs
+
+let likeCounts = {}; // { poemId: count }
+let currentPoemId = null;
+
+function getLiked() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch { return []; }
+}
+function setLiked(arr) {
+  localStorage.setItem(LS_KEY, JSON.stringify(arr));
+}
+function hasLiked(id) { return getLiked().includes(id); }
+
+async function fetchLikes() {
+  try {
+    const r = await fetch(BIN_URL, { headers: { 'X-Master-Key': BIN_KEY } });
+    const d = await r.json();
+    likeCounts = d.record?.likes || {};
+  } catch { likeCounts = {}; }
+}
+
+async function saveLikes() {
+  try {
+    await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': BIN_KEY },
+      body: JSON.stringify({ likes: likeCounts })
+    });
+  } catch {}
+}
+
+async function handleLike(poemId, btn) {
+  if (!poemId) return;
+  if (hasLiked(poemId)) return; // already liked
+
+  // Optimistic UI update
+  likeCounts[poemId] = (likeCounts[poemId] || 0) + 1;
+  const liked = getLiked(); liked.push(poemId); setLiked(liked);
+
+  // Update all buttons for this poem
+  updateLikeBtns(poemId);
+  btn.classList.add('anim');
+  setTimeout(() => btn.classList.remove('anim'), 350);
+
+  await saveLikes();
+}
+
+function updateLikeBtns(poemId) {
+  const count = likeCounts[poemId] || 0;
+  const liked = hasLiked(poemId);
+
+  // Poem card button
+  const cardBtn = document.getElementById('like-card-' + poemId);
+  if (cardBtn) {
+    cardBtn.querySelector('.like-count').textContent = count || '';
+    cardBtn.querySelector('.heart').textContent = liked ? '♥' : '♡';
+    cardBtn.classList.toggle('liked', liked);
+  }
+
+  // Poem view button
+  if (currentPoemId === poemId) {
+    const pvBtn = document.getElementById('pv-like-btn');
+    if (pvBtn) {
+      pvBtn.querySelector('.like-count').textContent = count > 0 ? count : '';
+      pvBtn.querySelector('.heart').textContent = liked ? '♥' : '♡';
+      pvBtn.classList.toggle('liked', liked);
+    }
+    const wrap = document.getElementById('pv-like-wrap');
+    if (wrap) wrap.classList.add('revealed');
+  }
+}
+
+// ── Render home ────────────────────────────────────────────
 function renderHome() {
   const list = document.getElementById('poem-list');
   document.getElementById('poem-count').textContent = poems.length + ' കവിതകൾ';
@@ -653,6 +778,8 @@ function renderHome() {
   }
   const sorted = [...poems].sort((a,b) => new Date(b.date)-new Date(a.date));
   sorted.forEach((poem, i) => {
+    const count = likeCounts[poem.id] || 0;
+    const liked = hasLiked(poem.id);
     const li = document.createElement('li');
     li.className = 'poem-card';
     li.style.transitionDelay = (i * 80) + 'ms';
@@ -666,7 +793,11 @@ function renderHome() {
           <span class="poem-date-sm">${fmtDate(poem.date)}</span>
         </div>
       </div>
-      <span class="poem-arrow">›</span>`;
+      <button class="like-btn${liked ? ' liked' : ''}" id="like-card-${poem.id}"
+        onclick="event.stopPropagation(); handleLike('${poem.id}', this)">
+        <span class="heart">${liked ? '♥' : '♡'}</span>
+        <span class="like-count">${count || ''}</span>
+      </button>`;
     list.appendChild(li);
     setTimeout(() => {
       new IntersectionObserver((entries, obs) => {
@@ -688,6 +819,7 @@ function showHome() { showView('home-view'); setNav('poems'); window.location.ha
 function showPoem(id) {
   const poem = poems.find(p => p.id === id);
   if (!poem) return showHome();
+  currentPoemId = id;
   document.getElementById('pv-title').textContent = poem.title;
   document.getElementById('pv-date').textContent = fmtDate(poem.date);
   const catEl = document.getElementById('pv-cat');
@@ -700,18 +832,25 @@ function showPoem(id) {
   });
   const sig = document.getElementById('pv-sig');
   sig.classList.remove('revealed');
+  const likeWrap = document.getElementById('pv-like-wrap');
+  likeWrap.classList.remove('revealed');
+  updateLikeBtns(id);
   showView('poem-view'); setNav('poems'); window.location.hash = id;
   const lines = body.querySelectorAll('.poem-line');
   lines.forEach((l,i) => setTimeout(() => l.classList.add('revealed'), 200 + i*110));
-  setTimeout(() => sig.classList.add('revealed'), 200 + lines.length*110 + 400);
+  const sigDelay = 200 + lines.length*110 + 400;
+  setTimeout(() => sig.classList.add('revealed'), sigDelay);
+  setTimeout(() => likeWrap.classList.add('revealed'), sigDelay + 600);
 }
 
 function showAbout() { showView('about-view'); setNav('about'); window.location.hash = 'about'; }
 
-renderHome();
-const h = window.location.hash.replace('#','');
-if (h === 'about') showAbout();
-else if (h) showPoem(h);
+fetchLikes().then(() => {
+  renderHome();
+  const h = window.location.hash.replace('#','');
+  if (h === 'about') showAbout();
+  else if (h) showPoem(h);
+});
 </script>
 </body>
 </html>
