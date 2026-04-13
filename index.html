@@ -1092,7 +1092,7 @@ async function doTranslate(poem, poemText, panel) {
         .map(l => l.trim())
         .filter(l => l.length > 0)
         .map(l => l.replace(/^\d+[\.\)\-]\s*/, ''));
-      if (lines.length >= count * 0.7) translations = lines;
+      if (lines.length > 0) translations = lines; // use any lines returned
     }
   }
 
