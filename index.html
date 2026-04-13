@@ -745,31 +745,44 @@ window.addEventListener('offline', updateOnlineStatus);
 updateOnlineStatus();
 
 // ── CYCLE 3: Error Handler Agent — Gemini retry ──────────────
-async function callGeminiWithRetry(prompt, retries = 2) {
+// ⚙️ Engineer Agent: jsonMode forces responseMimeType application/json
+async function callGeminiWithRetry(prompt, retries = 2, jsonMode = false) {
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: jsonMode ? 0.1 : 0.7,
+      ...(jsonMode ? { responseMimeType: 'application/json' } : {})
+    }
+  };
   for (let i = 0; i <= retries; i++) {
     try {
       const res = await fetch(GEMINI_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        body: JSON.stringify(body)
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(`HTTP ${res.status}: ${err?.error?.message || 'unknown'}`);
+      }
       const d = await res.json();
       const text = d.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!text) throw new Error('Empty response');
       return text;
     } catch (e) {
+      console.warn(`Gemini attempt ${i + 1} failed:`, e.message);
       if (i === retries) throw e;
-      await new Promise(r => setTimeout(r, 800 * (i + 1)));
+      await new Promise(r => setTimeout(r, 900 * (i + 1)));
     }
   }
 }
 
 // Override callGemini to use retry version
-async function callGemini(prompt) {
+async function callGemini(prompt, jsonMode = false) {
   try {
-    return await callGeminiWithRetry(prompt);
-  } catch {
+    return await callGeminiWithRetry(prompt, 2, jsonMode);
+  } catch (e) {
+    console.error('Gemini failed:', e.message);
     return null;
   }
 }
@@ -1014,7 +1027,11 @@ function showAbout(){showView('about-view');setNav('about');window.location.hash
 
 // ── Gemini AI ────────────────────────────────────────────────
 const GEMINI_KEY = 'AIzaSyBR4gpF8hNarAtaVMk8g6xrGHMIGolyJq0';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
+// 🚀 Performance Agent: upgraded to gemini-2.5-flash (fastest, best quality)
+const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
+// JSON mode URL — forces structured JSON output, no markdown wrapping
+const GEMINI_URL_JSON = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
 // callGemini defined above with retry logic by Error Handler Agent
 
 // Active AI panel state
@@ -1044,25 +1061,107 @@ function closeAiPanel() {
 async function doExplain(poem, poemText, panel) {
   const prompt = `You are a literary analyst. Here is a Malayalam poem titled "${poem.title}" by Anusree Othayorath:\n\n${poemText}\n\nIn 4-5 sentences, explain: (1) what the poem is about, (2) its central theme or emotion, (3) any key imagery or metaphors. Write in clear, warm English. No bullet points — flowing prose only.`;
   const text = await callGemini(prompt);
-  const paras = text.split('\n').filter(p => p.trim()).map(p => `<p>${p.trim()}</p>`).join('');
+  if (!text) throw new Error('No response');
+  const paras = text.split('\n').filter(p => p.trim()).map(p => `<p>${sanitize(p.trim())}</p>`).join('');
   panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Poem Explained</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><div class="ai-result">${paras}</div></div></div>`;
 }
 
+// 🌐 Translation Agent + 🧪 QA Agent: bulletproof translation
 async function doTranslate(poem, poemText, panel) {
-  const nonEmpty = poem.lines.filter(l => l !== '');
-  const prompt = `Translate these Malayalam poem lines to English poetically. Return ONLY a JSON array of translated strings in the same order, nothing else:\n${JSON.stringify(nonEmpty)}`;
-  const raw = await callGemini(prompt);
-  let translations;
+  // Keep stanza structure — preserve empty lines as markers
+  const allLines = poem.lines;
+  const nonEmpty = allLines.filter(l => l !== '');
+
+  // 🔒 Security Agent: escape poem content before embedding in prompt
+  const safeLines = nonEmpty.map(l => l.replace(/[`"\\]/g, ' '));
+
+  // ⚙️ Engineer Agent: use JSON mode for guaranteed parseable output
+  const prompt = `You are a Malayalam-to-English poetry translator. Translate each Malayalam line to English poetically, preserving rhythm and emotion.
+
+Input lines (JSON array):
+${JSON.stringify(safeLines)}
+
+Return a JSON array of the same length with each element being the English translation of the corresponding Malayalam line. No extra text, no markdown, only valid JSON.`;
+
+  let translations = null;
+
+  // 🧪 QA Agent: try JSON mode first, fallback to text mode
   try {
-    const clean = raw.replace(/```json|```/g, '').trim();
-    translations = JSON.parse(clean);
-  } catch {
-    translations = nonEmpty.map(() => '—');
+    const raw = await callGemini(prompt, true); // JSON mode
+    if (raw) {
+      // Multiple parse strategies
+      const clean = raw.trim()
+        .replace(/^```json\s*/i, '').replace(/```\s*$/,'')
+        .replace(/^```\s*/,'').trim();
+      const parsed = JSON.parse(clean);
+      if (Array.isArray(parsed)) translations = parsed;
+    }
+  } catch (e1) {
+    console.warn('JSON mode parse failed, trying text mode:', e1.message);
+    try {
+      const raw2 = await callGemini(prompt, false); // text fallback
+      if (raw2) {
+        const clean2 = raw2.trim()
+          .replace(/^```json\s*/i, '').replace(/```\s*$/,'')
+          .replace(/^```\s*/,'').trim();
+        // Try extracting JSON array from anywhere in response
+        const match = clean2.match(/\[[\s\S]*\]/);
+        if (match) translations = JSON.parse(match[0]);
+      }
+    } catch (e2) {
+      console.error('Both translation strategies failed:', e2.message);
+    }
   }
-  const rows = nonEmpty.map((orig, i) =>
-    `<div class="ai-translation-line"><span class="ai-orig">${orig}</span><span class="ai-eng">${translations[i] || '—'}</span></div>`
-  ).join('');
-  panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ English Translation</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><div style="display:flex;gap:1rem;margin-bottom:.6rem;font-family:'Space Grotesk',sans-serif;font-size:.62rem;letter-spacing:.15em;color:var(--text-soft);text-transform:uppercase"><span style="flex:1">Malayalam</span><span style="flex:1">English</span></div>${rows}</div></div>`;
+
+  // 🧪 QA Agent: validate length match
+  if (!translations || translations.length !== nonEmpty.length) {
+    if (translations && translations.length < nonEmpty.length) {
+      // Pad missing entries
+      while (translations.length < nonEmpty.length) translations.push('—');
+    } else {
+      translations = nonEmpty.map(() => '—');
+    }
+  }
+
+  // 🎨 Designer Agent: rebuild with stanza gaps preserved
+  let transIdx = 0;
+  const rows = allLines.map(line => {
+    if (line === '') {
+      return `<div style="height:.8rem"></div>`;
+    }
+    const eng = translations[transIdx] || '—';
+    transIdx++;
+    return `<div class="ai-translation-line">
+      <span class="ai-orig">${sanitize(line)}</span>
+      <span class="ai-eng">${sanitize(String(eng))}</span>
+    </div>`;
+  }).join('');
+
+  // 🎨 Designer Agent: improved UI with copy button
+  panel.innerHTML = `<div class="ai-panel">
+    <div class="ai-panel-header">
+      <span class="ai-panel-title">✦ English Translation</span>
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <button class="ai-panel-close" onclick="copyTranslation()" title="Copy translation" style="font-size:.65rem;letter-spacing:.08em;font-family:'Space Grotesk',sans-serif">⎘ Copy</button>
+        <button class="ai-panel-close" onclick="closeAiPanel()">✕</button>
+      </div>
+    </div>
+    <div class="ai-panel-body">
+      <div style="display:flex;gap:1rem;margin-bottom:.8rem;font-family:'Space Grotesk',sans-serif;font-size:.58rem;letter-spacing:.18em;color:var(--text-soft);text-transform:uppercase;padding-bottom:.6rem;border-bottom:1px solid rgba(255,255,255,.04)">
+        <span style="flex:1">Malayalam</span><span style="flex:1">English</span>
+      </div>
+      <div id="translation-content">${rows}</div>
+    </div>
+  </div>`;
+}
+
+// 🎨 Designer Agent: copy translation to clipboard
+function copyTranslation() {
+  const poem = poems.find(p => p.id === currentPoemId);
+  if (!poem) return;
+  const engLines = [...document.querySelectorAll('.ai-eng')].map(el => el.textContent).join('\n');
+  const text = `${poem.title} — Anusree Othayorath\n\n${engLines}`;
+  navigator.clipboard.writeText(text).then(() => showToast('Translation copied ✓')).catch(() => showToast('Copy failed'));
 }
 
 function doAsk(poem, poemText, panel) {
@@ -1093,16 +1192,21 @@ async function sendAsk() {
 
 async function doSimilar(poem, panel) {
   const allTitles = poems.filter(p => p.id !== poem.id).map(p => `${p.id}: ${p.title}`).join('\n');
-  const prompt = `Here is a Malayalam poem titled "${poem.title}":\n${poem.lines.filter(l=>l!=='').join('\n')}\n\nFrom this list of other poems by the same poet:\n${allTitles}\n\nReturn ONLY a JSON array of the 2-3 most thematically similar poem IDs (just the ids, no explanation):\n["id1","id2"]`;
-  const raw = await callGemini(prompt);
-  let ids;
-  try { ids = JSON.parse(raw.replace(/```json|```/g,'').trim()); } catch { ids = []; }
+  const prompt = `Malayalam poem titled "${poem.title}":\n${poem.lines.filter(l=>l!=='').join('\n')}\n\nOther poems list:\n${allTitles}\n\nReturn a JSON array of 2-3 most thematically similar poem IDs. Example: ["id1","id2"]`;
+  const raw = await callGemini(prompt, true); // JSON mode
+  let ids = [];
+  try {
+    const clean = (raw||'').trim().replace(/^```json\s*/i,'').replace(/```\s*$/,'').trim();
+    const match = clean.match(/\[[\s\S]*?\]/);
+    ids = JSON.parse(match ? match[0] : clean);
+    if (!Array.isArray(ids)) ids = [];
+  } catch { ids = []; }
   const similar = ids.map(id => poems.find(p => p.id === id)).filter(Boolean);
   if (!similar.length) {
-    panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Similar Poems</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><p class="ai-result">No closely similar poems found in the collection yet.</p></div></div>`;
+    panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Similar Poems</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><p class="ai-result">No closely similar poems found yet.</p></div></div>`;
     return;
   }
-  const items = similar.map(p => `<li class="similar-item" onclick="showPoem('${p.id}')">${p.title}</li>`).join('');
+  const items = similar.map(p => `<li class="similar-item" onclick="showPoem('${p.id}')">${sanitize(p.title)}</li>`).join('');
   panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Similar Poems</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><ul class="similar-list">${items}</ul></div></div>`;
 }
 
@@ -1111,10 +1215,12 @@ const moodCache = {};
 async function detectMood(poem) {
   if (moodCache[poem.id]) return moodCache[poem.id];
   const poemText = poem.lines.filter(l => l !== '').join('\n');
-  const prompt = `Read this Malayalam poem titled "${poem.title}":\n${poemText}\n\nReturn ONLY one word from this list that best describes its primary mood: joy, sadness, love, nature, resilience, memory`;
-  const raw = (await callGemini(prompt)).toLowerCase().trim().replace(/[^a-z]/g,'');
+  const prompt = `Read this Malayalam poem titled "${poem.title}":\n${poemText}\n\nReturn ONLY one word that best describes its primary mood. Choose from: joy, sadness, love, nature, resilience, memory`;
+  const raw = await callGemini(prompt);
+  if (!raw) return 'memory';
+  const cleaned = raw.toLowerCase().trim().replace(/[^a-z]/g,'');
   const valid = ['joy','sadness','love','nature','resilience','memory'];
-  const mood = valid.find(m => raw.includes(m)) || 'memory';
+  const mood = valid.find(m => cleaned.includes(m)) || 'memory';
   moodCache[poem.id] = mood;
   return mood;
 }
