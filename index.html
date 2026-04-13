@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>അനുശ്രീ ഒതയോരത്ത് | കവിതകൾ</title>
   <meta name="description" content="അനുശ്രീ ഒതയോരത്തിന്റെ മലയാളം കവിതകളുടെ സമാഹാരം" />
+  <meta name="theme-color" content="#03050a" />
+  <meta property="og:title" content="അനുശ്രീ ഒതയോരത്ത് | കവിതകൾ" />
+  <meta property="og:description" content="Malayalam poetry by Anusree Othayorath" />
+  <meta property="og:image" content="https://nekxxy.github.io/anusree-othayorath-poetry/profile.png" />
+  <meta property="og:url" content="https://nekxxy.github.io/anusree-othayorath-poetry/" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Malayalam:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
@@ -175,14 +182,74 @@
     .chat-a{align-self:flex-start;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.15);border-radius:10px 10px 10px 2px;padding:.5rem .9rem;font-family:'Space Grotesk',sans-serif;font-size:.82rem;color:var(--text-mid);max-width:85%;line-height:1.7}
 
     @media(max-width:480px){body{cursor:auto}#cursor,#cursor-ring{display:none}header{padding:3rem 1rem 1.5rem}.poem-num{display:none}.poem-view-actions{display:none}.toolbar{flex-wrap:wrap}.toolbar-btn span{display:none}.stats-bar{gap:1.5rem}.ai-bar{gap:.4rem}.ai-btn{font-size:.65rem;padding:.45rem .8rem}.ai-translation-line{flex-direction:column;gap:.2rem}}
+
+    /* ── Skip link (Accessibility Agent) ── */
+    .skip-link{position:absolute;top:-40px;left:1rem;background:var(--cyan);color:#000;padding:.5rem 1rem;border-radius:0 0 8px 8px;font-family:'Space Grotesk',sans-serif;font-size:.8rem;font-weight:600;z-index:10000;transition:top .2s;text-decoration:none}
+    .skip-link:focus{top:0}
+
+    /* ── Skeleton loader (UX Agent) ── */
+    .skeleton{background:linear-gradient(90deg,rgba(255,255,255,.03) 25%,rgba(255,255,255,.07) 50%,rgba(255,255,255,.03) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px;height:1rem}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    .skeleton-card{padding:1.4rem 1.6rem;border:1px solid var(--border);border-radius:16px;background:var(--surface);display:flex;align-items:center;gap:1.2rem}
+    .skeleton-title{height:1.1rem;width:60%;border-radius:6px}
+    .skeleton-sub{height:.7rem;width:30%;border-radius:4px;margin-top:.5rem}
+    .skeleton-num{height:.8rem;width:1.5rem;border-radius:4px}
+    .skeleton-like{height:1.6rem;width:3rem;border-radius:20px;margin-left:auto}
+
+    /* ── Mobile bottom nav (Mobile Agent) ── */
+    #mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:rgba(3,5,10,.92);border-top:1px solid var(--border);backdrop-filter:blur(20px);padding:.6rem 0 calc(.6rem + env(safe-area-inset-bottom));justify-content:space-around;align-items:center}
+    .mob-nav-btn{display:flex;flex-direction:column;align-items:center;gap:.25rem;background:none;border:none;color:var(--text-soft);font-family:'Space Grotesk',sans-serif;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding:.3rem .8rem;border-radius:8px;transition:color .2s;-webkit-tap-highlight-color:transparent;min-width:44px;min-height:44px;justify-content:center}
+    .mob-nav-btn.active{color:var(--cyan)}
+    .mob-nav-btn svg{width:18px;height:18px}
+    @media(max-width:480px){#mobile-nav{display:flex}main{padding-bottom:6rem}}
+
+    /* ── Keyboard shortcut hint (UX Agent) ── */
+    .kbd-hint{position:fixed;bottom:1rem;right:1rem;font-family:'Space Grotesk',sans-serif;font-size:.6rem;color:var(--text-soft);letter-spacing:.1em;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100;text-align:right;line-height:1.8}
+    .kbd-hint.show{opacity:.6}
+    kbd{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:3px;padding:.1rem .3rem;font-size:.6rem}
+    @media(max-width:480px){.kbd-hint{display:none}}
+
+    /* ── Poem nav arrows (Mobile Agent) ── */
+    .poem-nav-arrows{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+    .poem-nav-btn{display:inline-flex;align-items:center;gap:.4rem;font-family:'Space Grotesk',sans-serif;font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-soft);background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:.5rem .9rem;transition:all .3s;backdrop-filter:blur(10px);min-height:44px}
+    .poem-nav-btn:hover{color:var(--cyan);border-color:rgba(0,212,255,.35)}
+    .poem-nav-btn:disabled{opacity:.2;pointer-events:none}
+
+    /* ── Last read indicator (UX Agent) ── */
+    .poem-card.last-read::before{opacity:.5!important}
+    .last-read-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 6px var(--cyan);flex-shrink:0;animation:pulse 2s ease infinite}
+
+    /* ── View transition (Designer Agent) ── */
+    .view{display:none;animation:viewIn .3s ease both}
+    .view.active{display:block}
+    @keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ── Poem line highlight on hover (Designer Agent) ── */
+    .poem-line{display:block;opacity:0;transform:translateY(12px);transition:opacity .55s ease,transform .55s ease;border-radius:4px;padding:0 .5rem;margin:0 -.5rem}
+    .poem-line.revealed{opacity:1;transform:translateY(0)}
+    .poem-line:hover{background:rgba(0,212,255,.03)}
+
+    /* ── Reading streak (UX Agent) ── */
+    .streak-badge{display:inline-flex;align-items:center;gap:.3rem;font-family:'Space Grotesk',sans-serif;font-size:.6rem;letter-spacing:.1em;color:var(--gold);border:1px solid rgba(201,151,58,.2);border-radius:20px;padding:.15rem .6rem;margin-top:.3rem}
+
+    /* ── Better scrollbar ── */
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:rgba(0,212,255,.2);border-radius:2px}
+    ::-webkit-scrollbar-thumb:hover{background:rgba(0,212,255,.4)}
+
+    /* ── Focus visible (Accessibility Agent) ── */
+    :focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:4px}
+    button:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
   </style>
 </head>
 <body>
-<div id="cursor"></div>
-<div id="cursor-ring"></div>
-<div id="progress-bar"></div>
-<div id="toast"></div>
-<canvas id="bg-canvas"></canvas>
+<a href="#main-content" class="skip-link">Skip to content</a>
+<div id="cursor" aria-hidden="true"></div>
+<div id="cursor-ring" aria-hidden="true"></div>
+<div id="progress-bar" role="progressbar" aria-label="Reading progress" aria-hidden="true"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<canvas id="bg-canvas" aria-hidden="true"></canvas>
 
 <div class="page">
   <header>
@@ -198,19 +265,19 @@
     </div>
   </header>
 
-  <nav>
+  <nav role="navigation" aria-label="Main navigation">
     <div class="nav-pill">
-      <button class="nav-btn active" id="nav-poems" onclick="showHome()">കവിതകൾ</button>
+      <button class="nav-btn active" id="nav-poems" onclick="showHome()" aria-current="page">കവിതകൾ</button>
       <button class="nav-btn" id="nav-about" onclick="showAbout()">കവയിത്രി</button>
     </div>
   </nav>
 
-  <main>
+  <main id="main-content" role="main">
     <div id="home-view" class="view active">
       <div class="toolbar">
         <div class="search-wrap">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          <input id="search-input" type="text" placeholder="കവിത തിരയൂ…" oninput="filterPoems()" autocomplete="off" />
+          <input id="search-input" type="text" placeholder="കവിത തിരയൂ…" oninput="filterPoems()" autocomplete="off" aria-label="Search poems" />
         </div>
         <button class="toolbar-btn" onclick="showRandom()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
@@ -251,8 +318,19 @@
           <span class="heart">♡</span><span class="like-count"></span>
         </button>
       </div>
+      <div class="poem-nav-arrows" id="poem-nav-arrows">
+        <button class="poem-nav-btn" id="btn-prev-poem" onclick="navPoem(-1)" aria-label="Previous poem">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Previous
+        </button>
+        <span style="font-family:'Space Grotesk',sans-serif;font-size:.6rem;color:var(--text-soft);letter-spacing:.1em" id="poem-nav-pos"></span>
+        <button class="poem-nav-btn" id="btn-next-poem" onclick="navPoem(1)" aria-label="Next poem">
+          Next
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 2L10 7L5 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
       <!-- AI Bar -->
-      <div class="ai-bar">
+      <div class="ai-bar" role="toolbar" aria-label="AI features">
         <button class="ai-btn" id="ai-btn-explain" onclick="aiAction('explain')">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
           Explain
@@ -276,7 +354,7 @@
     <div id="about-view" class="view">
       <div class="about-wrap">
         <img src="logo.png" class="about-logo" alt="logo" />
-        <div class="about-avatar"><img src="profile.png" alt="അനുശ്രീ ഒതയോരത്ത്" /></div>
+        <div class="about-avatar"><img src="profile.png" alt="അനുശ്രീ ഒതയോരത്ത്" loading="lazy" /></div>
         <p class="about-name">അനുശ്രീ ഒതയോരത്ത്</p>
         <p class="about-name-en">Anusree Othayorath</p>
         <div class="poem-divider" style="margin-top:1.5rem"><div class="poem-divider-dot"></div></div>
@@ -291,11 +369,117 @@
     </div>
   </main>
 
-  <footer>© <span id="year"></span> &nbsp;·&nbsp; അനുശ്രീ ഒതയോരത്ത് &nbsp;·&nbsp; All rights reserved</footer>
+  <footer role="contentinfo">© <span id="year"></span> &nbsp;·&nbsp; അനുശ്രീ ഒതയോരത്ത് &nbsp;·&nbsp; All rights reserved</footer>
+</div>
+
+<!-- Mobile bottom nav (Mobile Agent) -->
+<nav id="mobile-nav" aria-label="Mobile navigation">
+  <button class="mob-nav-btn active" id="mob-nav-poems" onclick="showHome()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+    കവിതകൾ
+  </button>
+  <button class="mob-nav-btn" id="mob-nav-about" onclick="showAbout()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    കവയിത്രി
+  </button>
+</nav>
+
+<!-- Keyboard hint (UX Agent) -->
+<div class="kbd-hint" id="kbd-hint">
+  <kbd>←</kbd><kbd>→</kbd> navigate &nbsp; <kbd>Esc</kbd> back
 </div>
 
 <script src="poems.js"></script>
 <script>
+// ── Security Agent: XSS sanitizer ────────────────────────────
+function sanitize(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── Performance Agent: Debounce ──────────────────────────────
+function debounce(fn, ms) {
+  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+// ── UX Agent: Last read tracking ─────────────────────────────
+function getLastRead() { try { return JSON.parse(localStorage.getItem('ao_lastread') || '[]'); } catch { return []; } }
+function setLastRead(id) {
+  let lr = getLastRead().filter(x => x !== id);
+  lr.unshift(id); lr = lr.slice(0, 5);
+  localStorage.setItem('ao_lastread', JSON.stringify(lr));
+}
+
+// ── UX Agent: Reading streak ─────────────────────────────────
+function updateStreak() {
+  const today = new Date().toDateString();
+  const data = JSON.parse(localStorage.getItem('ao_streak') || '{"last":"","count":0}');
+  if (data.last === today) return data.count;
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  const count = data.last === yesterday ? data.count + 1 : 1;
+  localStorage.setItem('ao_streak', JSON.stringify({ last: today, count }));
+  return count;
+}
+
+// ── Mobile Agent: Poem navigator ─────────────────────────────
+function navPoem(dir) {
+  const idx = sortedPoems.findIndex(p => p.id === currentPoemId);
+  const next = sortedPoems[idx + dir];
+  if (next) showPoem(next.id);
+}
+function updatePoemNavUI() {
+  const idx = sortedPoems.findIndex(p => p.id === currentPoemId);
+  const prevBtn = document.getElementById('btn-prev-poem');
+  const nextBtn = document.getElementById('btn-next-poem');
+  const pos = document.getElementById('poem-nav-pos');
+  if (prevBtn) prevBtn.disabled = idx <= 0;
+  if (nextBtn) nextBtn.disabled = idx >= sortedPoems.length - 1;
+  if (pos) pos.textContent = `${idx + 1} / ${sortedPoems.length}`;
+}
+
+// ── Accessibility Agent: Keyboard navigation ─────────────────
+document.addEventListener('keydown', e => {
+  const inInput = ['INPUT','TEXTAREA'].includes(document.activeElement.tagName);
+  if (inInput) return;
+  const poemActive = document.getElementById('poem-view')?.classList.contains('active');
+  if (e.key === 'Escape' && poemActive) { showHome(); return; }
+  if (e.key === 'ArrowRight' && poemActive) { navPoem(1); return; }
+  if (e.key === 'ArrowLeft' && poemActive) { navPoem(-1); return; }
+});
+
+// Show kbd hint when on poem view
+function toggleKbdHint(show) {
+  const h = document.getElementById('kbd-hint');
+  if (h) h.classList.toggle('show', show);
+}
+
+// ── Mobile Agent: Sync mobile nav ────────────────────────────
+function syncMobileNav(key) {
+  document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('mob-nav-' + key);
+  if (el) el.classList.add('active');
+}
+
+// ── UX Agent: Show skeleton while loading ────────────────────
+function showSkeleton() {
+  const list = document.getElementById('poem-list');
+  if (!list) return;
+  list.innerHTML = Array.from({length: 4}, () => `
+    <li class="skeleton-card">
+      <div class="skeleton skeleton-num"></div>
+      <div style="flex:1"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-sub" style="margin-top:.5rem"></div></div>
+      <div class="skeleton skeleton-like"></div>
+    </li>`).join('');
+}
+
+// ── Mobile Agent: Touch swipe between poems ──────────────────
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  if (!document.getElementById('poem-view')?.classList.contains('active')) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 60) navPoem(dx < 0 ? 1 : -1);
+}, { passive: true });
+
 document.getElementById('year').textContent = new Date().getFullYear();
 
 // Cursor
@@ -368,33 +552,69 @@ function renderHome(filtered){
   const src=filtered!==undefined?filtered:sortedPoems;
   document.getElementById('poem-count').textContent=src.length+' കവിതകൾ';
   list.innerHTML='';
-  if(!src.length){list.innerHTML=`<li class="no-results">കവിതകളൊന്നും കണ്ടെത്തിയില്ല…</li>`;return}
+  list.setAttribute('role','list');
+  if(!src.length){
+    const q=document.getElementById('search-input').value.trim();
+    list.innerHTML=`<li class="no-results" role="status">${q ? `"${sanitize(q)}" — കണ്ടെത്തിയില്ല` : 'ഉടൻ കവിതകൾ ഇവിടെ എത്തും…'}</li>`;
+    return;
+  }
+  const lastRead=getLastRead();
   src.forEach((poem,i)=>{
     const count=likeCounts[poem.id]||0,liked=hasLiked(poem.id);
-    const li=document.createElement('li');li.className='poem-card';li.style.transitionDelay=(i*60)+'ms';li.onclick=()=>showPoem(poem.id);
-    li.innerHTML=`<span class="poem-num">${String(i+1).padStart(2,'0')}</span><div class="poem-card-body"><span class="poem-title-ml">${poem.title}</span><span class="poem-read-time">${readTime(poem.lines)}</span></div><button class="like-btn${liked?' liked':''}" id="like-card-${poem.id}" onclick="event.stopPropagation();handleLike('${poem.id}',this)"><span class="heart">${liked?'♥':'♡'}</span><span class="like-count">${count||''}</span></button>`;
+    const isLastRead=lastRead[0]===poem.id;
+    const rt=readTime(poem.lines);
+    const numStr=String(i+1).padStart(2,'0');
+    const li=document.createElement('li');
+    li.className='poem-card'+(isLastRead?' last-read':'');
+    li.setAttribute('role','listitem');li.setAttribute('tabindex','0');li.setAttribute('aria-label',poem.title);
+    li.style.transitionDelay=(i*60)+'ms';
+    li.onclick=()=>showPoem(poem.id);
+    li.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();showPoem(poem.id);}};
+    li.innerHTML=`<span class="poem-num" aria-hidden="true">${numStr}</span><div class="poem-card-body"><span class="poem-title-ml">${sanitize(poem.title)}</span><span class="poem-read-time">${rt}${isLastRead?' &nbsp;·&nbsp; <span style="color:var(--cyan);font-size:.58rem">↩ last read</span>':''}</span></div>${isLastRead?'<div class="last-read-dot" aria-hidden="true"></div>':''}<button class="like-btn${liked?' liked':''}" id="like-card-${poem.id}" aria-label="Like this poem" onclick="event.stopPropagation();handleLike('${poem.id}',this)"><span class="heart" aria-hidden="true">${liked?'♥':'♡'}</span><span class="like-count">${count||''}</span></button>`;
     list.appendChild(li);
     setTimeout(()=>new IntersectionObserver((entries,obs)=>{entries.forEach(e=>{if(e.isIntersecting){li.classList.add('visible');obs.disconnect()}})},{threshold:.05}).observe(li),50);
   });
 }
-function filterPoems(){const q=document.getElementById('search-input').value.trim().toLowerCase();if(!q){renderHome();return}renderHome(sortedPoems.filter(p=>p.title.toLowerCase().includes(q)))}
+const debouncedFilter = debounce(() => {
+  const q=document.getElementById('search-input').value.trim().toLowerCase();
+  if(!q){renderHome();return;}
+  renderHome(sortedPoems.filter(p=>p.title.toLowerCase().includes(q)||p.lines.join(' ').toLowerCase().includes(q)));
+}, 250);
+function filterPoems(){ debouncedFilter(); }
 function showRandom(){if(!poems.length)return;showPoem(poems[Math.floor(Math.random()*poems.length)].id)}
 
 // Views
-function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo({top:0,behavior:'smooth'});progressBar.style.display=id==='poem-view'?'block':'none';if(id!=='poem-view')progressBar.style.width='0%'}
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const el=document.getElementById(id);el.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  progressBar.style.display=id==='poem-view'?'block':'none';
+  if(id!=='poem-view')progressBar.style.width='0%';
+  toggleKbdHint(id==='poem-view');
+}
+function setNav(k){
+  document.querySelectorAll('.nav-btn').forEach(b=>{b.classList.remove('active');b.removeAttribute('aria-current')});
+  const el=document.getElementById('nav-'+k);
+  if(el){el.classList.add('active');el.setAttribute('aria-current','page');}
+  syncMobileNav(k==='poems'?'poems':'about');
+}
 function showHome(){showView('home-view');setNav('poems');history.replaceState(null,'',location.pathname);document.getElementById('search-input').value='';renderHome()}
 function showPoem(id){
   const poem=poems.find(p=>p.id===id);if(!poem)return showHome();
   currentPoemId=id;
+  setLastRead(id);
   document.getElementById('pv-title').textContent=poem.title;
   const body=document.getElementById('pv-body');body.innerHTML='';
-  poem.lines.forEach(line=>{if(line===''){const g=document.createElement('span');g.className='stanza-gap';body.appendChild(g)}else{const s=document.createElement('span');s.className='poem-line';s.textContent=line;body.appendChild(s)}});
+  poem.lines.forEach(line=>{
+    if(line===''){const g=document.createElement('span');g.className='stanza-gap';g.setAttribute('aria-hidden','true');body.appendChild(g)}
+    else{const s=document.createElement('span');s.className='poem-line';s.textContent=line;body.appendChild(s)}
+  });
   const sig=document.getElementById('pv-sig');sig.classList.remove('revealed');
   const lw=document.getElementById('pv-like-wrap');lw.classList.remove('revealed');
-  updateLikeBtns(id);showView('poem-view');setNav('poems');window.location.hash=id;
-  // reset AI panel
+  updateLikeBtns(id);
+  updatePoemNavUI();
+  showView('poem-view');setNav('poems');window.location.hash=id;
   closeAiPanel();
-  // detect mood async
   showMoodBadge(poem);
   const lines=body.querySelectorAll('.poem-line');
   lines.forEach((l,i)=>setTimeout(()=>l.classList.add('revealed'),200+i*100));
@@ -504,7 +724,7 @@ async function sendAsk() {
   if (!poem) return;
   const poemText = poem.lines.filter(l => l !== '').join('\n');
   const history = document.getElementById('chat-history');
-  history.innerHTML += `<div class="chat-q">${q}</div>`;
+  history.innerHTML += `<div class="chat-q">${sanitize(q)}</div>`;
   input.value = '';
   const loadEl = document.createElement('div');
   loadEl.className = 'chat-a';
@@ -565,6 +785,25 @@ async function showMoodBadge(poem) {
 }
 
 // Init
+// Performance Agent: fewer particles on mobile
+const isMobile = window.innerWidth < 480;
+if (isMobile) particles.splice(50);
+
+// UX Agent: show skeleton immediately
+showSkeleton();
+
+// UX Agent: reading streak
+const streak = updateStreak();
+if (streak >= 2) {
+  const statsBar = document.querySelector('.stats-bar');
+  if (statsBar) {
+    const s = document.createElement('div');
+    s.className = 'stat';
+    s.innerHTML = `<span class="stat-num" style="color:var(--gold)">${streak}🔥</span><span class="stat-label">Streak</span>`;
+    statsBar.appendChild(s);
+  }
+}
+
 fetchLikes().then(()=>{
   sortedPoems=[...poems].sort((a,b)=>new Date(b.date)-new Date(a.date));
   updateStats();
