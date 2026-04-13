@@ -13,6 +13,8 @@
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="canonical" href="https://nekxxy.github.io/anusree-othayorath-poetry/" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="logo.png" />
   <!-- SEO Agent: JSON-LD structured data -->
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"Person","name":"Anusree Othayorath","url":"https://nekxxy.github.io/anusree-othayorath-poetry/","description":"Malayalam poet","sameAs":["https://t.me/Hazel_Grace_Lancaster96"]}
@@ -132,6 +134,30 @@
     @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
     @keyframes spin{to{transform:rotate(360deg)}}
     @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+    /* ── CYCLE 3: Polish + Error Handler + PWA Agent ── */
+    #offline-banner{position:fixed;top:0;left:0;right:0;background:rgba(224,85,85,.12);border-bottom:1px solid rgba(224,85,85,.3);color:#e05555;font-family:'Space Grotesk',sans-serif;font-size:.72rem;letter-spacing:.1em;text-align:center;padding:.5rem;z-index:2000;transform:translateY(-100%);transition:transform .3s}
+    #offline-banner.show{transform:translateY(0)}
+    #install-prompt{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(3,5,10,.95);border:1px solid var(--border);border-radius:16px;padding:1.2rem 1.6rem;backdrop-filter:blur(20px);z-index:900;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;display:flex;align-items:center;gap:1rem;max-width:340px;width:calc(100% - 2rem)}
+    #install-prompt.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+    .install-text{flex:1;font-family:'Space Grotesk',sans-serif;font-size:.78rem;color:var(--text-mid);line-height:1.5}
+    .install-text strong{color:var(--text);display:block;font-size:.82rem;margin-bottom:.2rem}
+    .install-btns{display:flex;flex-direction:column;gap:.4rem;flex-shrink:0}
+    .install-yes{background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.3);border-radius:8px;color:var(--cyan);font-family:'Space Grotesk',sans-serif;font-size:.68rem;letter-spacing:.08em;padding:.4rem .8rem;cursor:pointer;transition:all .2s;white-space:nowrap}
+    .install-yes:hover{background:rgba(0,212,255,.2)}
+    .install-no{background:none;border:none;color:var(--text-soft);font-family:'Space Grotesk',sans-serif;font-size:.62rem;cursor:pointer;padding:.2rem;text-align:center;transition:color .2s}
+    .install-no:hover{color:var(--text)}
+    .ai-retry-btn{display:inline-flex;align-items:center;gap:.4rem;margin-top:.8rem;font-family:'Space Grotesk',sans-serif;font-size:.7rem;letter-spacing:.1em;color:#a78bfa;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);border-radius:8px;padding:.4rem .8rem;cursor:pointer;transition:all .2s}
+    .ai-retry-btn:hover{background:rgba(139,92,246,.2)}
+    .poem-body ::selection{background:rgba(0,212,255,.2);color:var(--text)}
+    .page{animation:pageLoad .6s ease both}
+    @keyframes pageLoad{from{opacity:0}to{opacity:1}}
+    .about-stats{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-top:1.5rem}
+    .about-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;text-align:center;backdrop-filter:blur(10px)}
+    .about-stat-num{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:600;color:var(--cyan);display:block}
+    .about-stat-label{font-family:'Space Grotesk',sans-serif;font-size:.58rem;color:var(--text-soft);letter-spacing:.15em;text-transform:uppercase;margin-top:.2rem}
+    @media print{#cursor,#cursor-ring,#bg-canvas,#progress-bar,nav,.toolbar,.ai-bar,#ai-panel,.poem-view-header,.poem-nav-arrows,footer,#mobile-nav,.kbd-hint,.font-ctrl{display:none!important}body{background:#fff;color:#000;cursor:auto}body::before,body::after{display:none}.poem-view-title{color:#000}.poem-body{color:#333;font-size:1rem;line-height:2}.poem-line{opacity:1!important;transform:none!important}.poem-signature{opacity:1!important;color:#666}.mood-badge{display:none!important}}
+    @media(max-width:480px){#install-prompt{bottom:5.5rem}}
 
     /* ── Mood badge ── */
     .mood-badge{display:inline-flex;align-items:center;gap:.35rem;font-family:'Space Grotesk',sans-serif;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .7rem;border-radius:20px;margin-bottom:1rem;border:1px solid;animation:fadeIn .4s ease both}
@@ -305,6 +331,17 @@
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to content</a>
+<div id="offline-banner" role="alert" aria-live="assertive">⚠ &nbsp; You are offline. Some features may not work.</div>
+<div id="install-prompt" role="dialog" aria-label="Install app">
+  <div class="install-text">
+    <strong>Add to Home Screen</strong>
+    Read poetry offline, anytime.
+  </div>
+  <div class="install-btns">
+    <button class="install-yes" onclick="doInstall()">Install</button>
+    <button class="install-no" onclick="dismissInstall()">Not now</button>
+  </div>
+</div>
 <div id="cursor" aria-hidden="true"></div>
 <div id="cursor-ring" aria-hidden="true"></div>
 <div id="progress-bar" role="progressbar" aria-label="Reading progress" aria-hidden="true"></div>
@@ -434,6 +471,12 @@
         <p class="about-name-en">Anusree Othayorath</p>
         <div class="poem-divider" style="margin-top:1.5rem"><div class="poem-divider-dot"></div></div>
         <p class="about-bio">കവിതകളിലൂടെ ജീവിതത്തിന്റെ നിറങ്ങൾ കണ്ടെത്തുന്ന ഒരു മലയാളി കവയിത്രി.<br /><br />പ്രകൃതി, സ്നേഹം, ഓർമ്മ, ജീവിതം — ഇവ അവരുടെ കവിതകളുടെ ആത്മാവ്.</p>
+        <div class="about-stats">
+          <div class="about-stat-card"><span class="about-stat-num" id="about-stat-poems">—</span><span class="about-stat-label">Poems</span></div>
+          <div class="about-stat-card"><span class="about-stat-num" id="about-stat-likes">—</span><span class="about-stat-label">Total Likes</span></div>
+          <div class="about-stat-card"><span class="about-stat-num" id="about-stat-saved">—</span><span class="about-stat-label">Saved by You</span></div>
+          <div class="about-stat-card"><span class="about-stat-num" id="about-stat-read">—</span><span class="about-stat-label">You've Read</span></div>
+        </div>
         <div class="about-links">
           <a class="tg-btn" href="https://t.me/Hazel_Grace_Lancaster96" target="_blank" rel="noopener">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
@@ -692,6 +735,131 @@ function changeFontSize(dir) {
 const fontCtrl = document.getElementById('font-ctrl');
 function toggleFontCtrl(show) { fontCtrl?.classList.toggle('show', show); }
 
+// ── CYCLE 3: Error Handler Agent — Offline detection ─────────
+function updateOnlineStatus() {
+  const banner = document.getElementById('offline-banner');
+  if (banner) banner.classList.toggle('show', !navigator.onLine);
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// ── CYCLE 3: Error Handler Agent — Gemini retry ──────────────
+async function callGeminiWithRetry(prompt, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const res = await fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const d = await res.json();
+      const text = d.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error('Empty response');
+      return text;
+    } catch (e) {
+      if (i === retries) throw e;
+      await new Promise(r => setTimeout(r, 800 * (i + 1)));
+    }
+  }
+}
+
+// Override callGemini to use retry version
+async function callGemini(prompt) {
+  try {
+    return await callGeminiWithRetry(prompt);
+  } catch {
+    return null;
+  }
+}
+
+// Patch aiAction to show retry button on failure
+const _origAiAction = window.aiAction;
+async function aiAction(type) {
+  if (activeAiPanel === type) { closeAiPanel(); return; }
+  const poem = poems.find(p => p.id === currentPoemId);
+  if (!poem) return;
+  activeAiPanel = type;
+  document.querySelectorAll('.ai-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('ai-btn-' + type).classList.add('active');
+  const panel = document.getElementById('ai-panel');
+  const poemText = poem.lines.filter(l => l !== '').join('\n');
+  const labels = { explain: 'Poem Explained', translate: 'English Translation', ask: 'Ask the Poet', similar: 'Similar Poems' };
+  panel.innerHTML = aiLoading(labels[type]);
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  try {
+    if (type === 'explain') await doExplain(poem, poemText, panel);
+    else if (type === 'translate') await doTranslate(poem, poemText, panel);
+    else if (type === 'ask') doAsk(poem, poemText, panel);
+    else if (type === 'similar') await doSimilar(poem, panel);
+  } catch {
+    panel.innerHTML = `<div class="ai-panel">
+      <div class="ai-panel-header"><span class="ai-panel-title">✦ ${labels[type]}</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div>
+      <div class="ai-panel-body">
+        <p class="ai-result" style="color:var(--text-soft)">Couldn't connect to AI. Check your internet connection.</p>
+        <button class="ai-retry-btn" onclick="aiAction('${type}')">↺ Try again</button>
+      </div></div>`;
+  }
+}
+
+// ── CYCLE 3: PWA Agent — Install prompt ──────────────────────
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show after 30s if not dismissed before
+  const dismissed = localStorage.getItem('ao_install_dismissed');
+  if (!dismissed) setTimeout(() => {
+    document.getElementById('install-prompt')?.classList.add('show');
+  }, 30000);
+});
+function doInstall() {
+  document.getElementById('install-prompt')?.classList.remove('show');
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(() => { deferredInstallPrompt = null; });
+  }
+}
+function dismissInstall() {
+  document.getElementById('install-prompt')?.classList.remove('show');
+  localStorage.setItem('ao_install_dismissed', '1');
+}
+
+// ── CYCLE 3: Polish Agent — About page live stats ─────────────
+function updateAboutStats() {
+  const tl = Object.values(likeCounts).reduce((a, b) => a + b, 0);
+  const saved = getBookmarks().length;
+  const read = getLastRead().length;
+  const els = {
+    'about-stat-poems': poems.length,
+    'about-stat-likes': tl,
+    'about-stat-saved': saved,
+    'about-stat-read': read
+  };
+  Object.entries(els).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  });
+}
+
+// Call updateAboutStats when about view is shown
+const _origShowAbout = window.showAbout;
+function showAbout() {
+  showView('about-view'); setNav('about');
+  window.location.hash = 'about';
+  toggleFontCtrl(false);
+  updateAboutStats();
+}
+
+// ── CYCLE 3: PWA Agent — Register service worker ─────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
 document.getElementById('year').textContent = new Date().getFullYear();
 
 // Cursor
@@ -842,21 +1010,12 @@ function showPoem(id){
   setTimeout(()=>sig.classList.add('revealed'),sd);
   setTimeout(()=>lw.classList.add('revealed'),sd+600);
 }
-function showAbout(){showView('about-view');setNav('about');window.location.hash='about';toggleFontCtrl(false);}
+function showAbout(){showView('about-view');setNav('about');window.location.hash='about';toggleFontCtrl(false);updateAboutStats();}
 
 // ── Gemini AI ────────────────────────────────────────────────
 const GEMINI_KEY = 'AIzaSyBR4gpF8hNarAtaVMk8g6xrGHMIGolyJq0';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
-
-async function callGemini(prompt) {
-  const res = await fetch(GEMINI_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-  });
-  const d = await res.json();
-  return d.candidates?.[0]?.content?.parts?.[0]?.text || 'Unable to get response.';
-}
+// callGemini defined above with retry logic by Error Handler Agent
 
 // Active AI panel state
 let activeAiPanel = null;
@@ -880,32 +1039,7 @@ function closeAiPanel() {
   activeAiPanel = null;
 }
 
-async function aiAction(type) {
-  if (activeAiPanel === type) { closeAiPanel(); return; }
-  const poem = poems.find(p => p.id === currentPoemId);
-  if (!poem) return;
-  activeAiPanel = type;
-
-  document.querySelectorAll('.ai-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('ai-btn-' + type).classList.add('active');
-
-  const panel = document.getElementById('ai-panel');
-  const poemText = poem.lines.filter(l => l !== '').join('\n');
-  const labels = { explain: 'Poem Explained', translate: 'English Translation', ask: 'Ask the Poet', similar: 'Similar Poems' };
-  panel.innerHTML = aiLoading(labels[type]);
-  panel.style.display = 'block';
-  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-  try {
-    if (type === 'explain') await doExplain(poem, poemText, panel);
-    else if (type === 'translate') await doTranslate(poem, poemText, panel);
-    else if (type === 'ask') doAsk(poem, poemText, panel);
-    else if (type === 'similar') await doSimilar(poem, panel);
-  } catch (e) {
-    panel.innerHTML = aiLoading(labels[type]).replace('ai-loading">', 'ai-loading" style="display:none">');
-    panel.querySelector('.ai-panel-body').innerHTML = '<p class="ai-result" style="color:var(--red)">Something went wrong. Please try again.</p>';
-  }
-}
+// aiAction defined above by Error Handler Agent (with retry + offline error UI)
 
 async function doExplain(poem, poemText, panel) {
   const prompt = `You are a literary analyst. Here is a Malayalam poem titled "${poem.title}" by Anusree Othayorath:\n\n${poemText}\n\nIn 4-5 sentences, explain: (1) what the poem is about, (2) its central theme or emotion, (3) any key imagery or metaphors. Write in clear, warm English. No bullet points — flowing prose only.`;

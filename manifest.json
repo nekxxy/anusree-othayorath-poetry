@@ -1,0 +1,16 @@
+{
+  "name": "അനുശ്രീ ഒതയോരത്ത് | കവിതകൾ",
+  "short_name": "Anusree Kavitha",
+  "description": "Malayalam poetry by Anusree Othayorath",
+  "start_url": "/anusree-othayorath-poetry/",
+  "display": "standalone",
+  "background_color": "#03050a",
+  "theme_color": "#03050a",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "logo.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "logo.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "categories": ["books", "entertainment"],
+  "lang": "ml"
+}
