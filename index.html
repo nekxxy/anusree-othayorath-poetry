@@ -118,7 +118,63 @@
     footer{text-align:center;padding:2.5rem 1rem;font-family:'Space Grotesk',sans-serif;font-size:.7rem;color:var(--text-soft);letter-spacing:.15em;position:relative;z-index:2;border-top:1px solid var(--border);margin-top:2rem}
     @keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
     @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-    @media(max-width:480px){body{cursor:auto}#cursor,#cursor-ring{display:none}header{padding:3rem 1rem 1.5rem}.poem-num{display:none}.poem-view-actions{display:none}.toolbar{flex-wrap:wrap}.toolbar-btn span{display:none}.stats-bar{gap:1.5rem}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+    /* ── Mood badge ── */
+    .mood-badge{display:inline-flex;align-items:center;gap:.35rem;font-family:'Space Grotesk',sans-serif;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .7rem;border-radius:20px;margin-bottom:1rem;border:1px solid;animation:fadeIn .4s ease both}
+    .mood-joy{color:#f0d080;border-color:rgba(240,208,128,.3);background:rgba(240,208,128,.07)}
+    .mood-sad{color:#a0c4e8;border-color:rgba(160,196,232,.3);background:rgba(160,196,232,.07)}
+    .mood-love{color:#f4a0b0;border-color:rgba(244,160,176,.3);background:rgba(244,160,176,.07)}
+    .mood-nature{color:#80d4a0;border-color:rgba(128,212,160,.3);background:rgba(128,212,160,.07)}
+    .mood-resilience{color:#ffb060;border-color:rgba(255,176,96,.3);background:rgba(255,176,96,.07)}
+    .mood-memory{color:#c0a0e8;border-color:rgba(192,160,232,.3);background:rgba(192,160,232,.07)}
+    .mood-default{color:var(--text-soft);border-color:var(--border);background:var(--surface)}
+
+    /* ── AI buttons bar ── */
+    .ai-bar{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border)}
+    .ai-btn{display:inline-flex;align-items:center;gap:.4rem;font-family:'Space Grotesk',sans-serif;font-size:.7rem;letter-spacing:.1em;padding:.5rem 1rem;border-radius:10px;border:1px solid rgba(139,92,246,.25);color:#a78bfa;background:rgba(139,92,246,.06);cursor:none;transition:all .25s;backdrop-filter:blur(10px)}
+    .ai-btn:hover{border-color:rgba(139,92,246,.5);background:rgba(139,92,246,.12);transform:translateY(-1px);box-shadow:0 6px 20px rgba(139,92,246,.1)}
+    .ai-btn.active{border-color:rgba(139,92,246,.6);background:rgba(139,92,246,.15);color:#c4b5fd}
+    .ai-btn svg{flex-shrink:0}
+
+    /* ── AI panel ── */
+    .ai-panel{margin-top:1.5rem;border:1px solid rgba(139,92,246,.2);border-radius:16px;background:rgba(139,92,246,.04);backdrop-filter:blur(16px);overflow:hidden;animation:fadeIn .35s ease both}
+    .ai-panel-header{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.2rem;border-bottom:1px solid rgba(139,92,246,.15)}
+    .ai-panel-title{font-family:'Space Grotesk',sans-serif;font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:#a78bfa}
+    .ai-panel-close{background:none;border:none;color:var(--text-soft);cursor:none;font-size:1rem;line-height:1;padding:.2rem .4rem;border-radius:4px;transition:color .2s}
+    .ai-panel-close:hover{color:var(--text)}
+    .ai-panel-body{padding:1.2rem 1.4rem}
+
+    /* ── Loading ── */
+    .ai-loading{display:flex;align-items:center;gap:.8rem;color:var(--text-soft);font-family:'Space Grotesk',sans-serif;font-size:.8rem;padding:.4rem 0}
+    .ai-spinner{width:16px;height:16px;border:2px solid rgba(139,92,246,.2);border-top-color:#a78bfa;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+    .ai-dots span{animation:pulse 1.2s ease infinite}.ai-dots span:nth-child(2){animation-delay:.2s}.ai-dots span:nth-child(3){animation-delay:.4s}
+
+    /* ── Result text ── */
+    .ai-result{font-size:.95rem;line-height:1.9;color:var(--text-mid);font-family:'Space Grotesk',sans-serif}
+    .ai-result p{margin-bottom:.8rem}
+    .ai-result p:last-child{margin-bottom:0}
+    .ai-translation-line{display:flex;gap:1rem;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.88rem}
+    .ai-translation-line:last-child{border-bottom:none}
+    .ai-orig{color:var(--text-mid);flex:1;font-family:'Noto Serif Malayalam',serif}
+    .ai-eng{color:var(--text-soft);flex:1;font-style:italic}
+    .similar-list{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+    .similar-item{padding:.6rem .9rem;border:1px solid var(--border);border-radius:8px;cursor:none;font-size:.88rem;color:var(--text-mid);transition:all .2s;background:var(--surface)}
+    .similar-item:hover{border-color:rgba(0,212,255,.3);color:var(--cyan)}
+
+    /* ── Ask Poet chat ── */
+    .ask-form{display:flex;gap:.6rem;margin-top:.8rem}
+    #ask-input{flex:1;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:8px;padding:.55rem .9rem;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:.82rem;outline:none;transition:border-color .2s}
+    #ask-input:focus{border-color:rgba(139,92,246,.45)}
+    #ask-input::placeholder{color:var(--text-soft)}
+    .ask-send{background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);border-radius:8px;padding:.55rem .9rem;color:#a78bfa;cursor:none;font-family:'Space Grotesk',sans-serif;font-size:.72rem;letter-spacing:.08em;transition:all .2s;white-space:nowrap}
+    .ask-send:hover{background:rgba(139,92,246,.25);border-color:rgba(139,92,246,.5)}
+    .chat-history{display:flex;flex-direction:column;gap:.8rem;margin-bottom:.8rem;max-height:280px;overflow-y:auto}
+    .chat-q{align-self:flex-end;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.15);border-radius:10px 10px 2px 10px;padding:.5rem .9rem;font-family:'Space Grotesk',sans-serif;font-size:.82rem;color:var(--text-mid);max-width:85%}
+    .chat-a{align-self:flex-start;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.15);border-radius:10px 10px 10px 2px;padding:.5rem .9rem;font-family:'Space Grotesk',sans-serif;font-size:.82rem;color:var(--text-mid);max-width:85%;line-height:1.7}
+
+    @media(max-width:480px){body{cursor:auto}#cursor,#cursor-ring{display:none}header{padding:3rem 1rem 1.5rem}.poem-num{display:none}.poem-view-actions{display:none}.toolbar{flex-wrap:wrap}.toolbar-btn span{display:none}.stats-bar{gap:1.5rem}.ai-bar{gap:.4rem}.ai-btn{font-size:.65rem;padding:.45rem .8rem}.ai-translation-line{flex-direction:column;gap:.2rem}}
   </style>
 </head>
 <body>
@@ -186,6 +242,7 @@
         </div>
       </div>
       <h2 class="poem-view-title" id="pv-title"></h2>
+      <div style="text-align:center"><div class="mood-badge mood-default" id="pv-mood" style="display:none"></div></div>
       <div class="poem-divider"><div class="poem-divider-dot"></div></div>
       <div class="poem-body" id="pv-body"></div>
       <p class="poem-signature" id="pv-sig">~ Anusree Othayorath ~</p>
@@ -194,6 +251,26 @@
           <span class="heart">♡</span><span class="like-count"></span>
         </button>
       </div>
+      <!-- AI Bar -->
+      <div class="ai-bar">
+        <button class="ai-btn" id="ai-btn-explain" onclick="aiAction('explain')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          Explain
+        </button>
+        <button class="ai-btn" id="ai-btn-translate" onclick="aiAction('translate')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8l6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg>
+          Translate
+        </button>
+        <button class="ai-btn" id="ai-btn-ask" onclick="aiAction('ask')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Ask Poet
+        </button>
+        <button class="ai-btn" id="ai-btn-similar" onclick="aiAction('similar')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+          Similar
+        </button>
+      </div>
+      <div id="ai-panel" style="display:none"></div>
     </div>
 
     <div id="about-view" class="view">
@@ -315,6 +392,10 @@ function showPoem(id){
   const sig=document.getElementById('pv-sig');sig.classList.remove('revealed');
   const lw=document.getElementById('pv-like-wrap');lw.classList.remove('revealed');
   updateLikeBtns(id);showView('poem-view');setNav('poems');window.location.hash=id;
+  // reset AI panel
+  closeAiPanel();
+  // detect mood async
+  showMoodBadge(poem);
   const lines=body.querySelectorAll('.poem-line');
   lines.forEach((l,i)=>setTimeout(()=>l.classList.add('revealed'),200+i*100));
   const sd=200+lines.length*100+400;
@@ -322,6 +403,166 @@ function showPoem(id){
   setTimeout(()=>lw.classList.add('revealed'),sd+600);
 }
 function showAbout(){showView('about-view');setNav('about');window.location.hash='about'}
+
+// ── Gemini AI ────────────────────────────────────────────────
+const GEMINI_KEY = 'AIzaSyBR4gpF8hNarAtaVMk8g6xrGHMIGolyJq0';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+
+async function callGemini(prompt) {
+  const res = await fetch(GEMINI_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+  });
+  const d = await res.json();
+  return d.candidates?.[0]?.content?.parts?.[0]?.text || 'Unable to get response.';
+}
+
+// Active AI panel state
+let activeAiPanel = null;
+
+function aiLoading(label) {
+  return `<div class="ai-panel">
+    <div class="ai-panel-header">
+      <span class="ai-panel-title">✦ ${label}</span>
+      <button class="ai-panel-close" onclick="closeAiPanel()">✕</button>
+    </div>
+    <div class="ai-panel-body">
+      <div class="ai-loading"><div class="ai-spinner"></div><span>Thinking<span class="ai-dots"><span>.</span><span>.</span><span>.</span></span></span></div>
+    </div>
+  </div>`;
+}
+
+function closeAiPanel() {
+  document.getElementById('ai-panel').style.display = 'none';
+  document.getElementById('ai-panel').innerHTML = '';
+  document.querySelectorAll('.ai-btn').forEach(b => b.classList.remove('active'));
+  activeAiPanel = null;
+}
+
+async function aiAction(type) {
+  if (activeAiPanel === type) { closeAiPanel(); return; }
+  const poem = poems.find(p => p.id === currentPoemId);
+  if (!poem) return;
+  activeAiPanel = type;
+
+  document.querySelectorAll('.ai-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('ai-btn-' + type).classList.add('active');
+
+  const panel = document.getElementById('ai-panel');
+  const poemText = poem.lines.filter(l => l !== '').join('\n');
+  const labels = { explain: 'Poem Explained', translate: 'English Translation', ask: 'Ask the Poet', similar: 'Similar Poems' };
+  panel.innerHTML = aiLoading(labels[type]);
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  try {
+    if (type === 'explain') await doExplain(poem, poemText, panel);
+    else if (type === 'translate') await doTranslate(poem, poemText, panel);
+    else if (type === 'ask') doAsk(poem, poemText, panel);
+    else if (type === 'similar') await doSimilar(poem, panel);
+  } catch (e) {
+    panel.innerHTML = aiLoading(labels[type]).replace('ai-loading">', 'ai-loading" style="display:none">');
+    panel.querySelector('.ai-panel-body').innerHTML = '<p class="ai-result" style="color:var(--red)">Something went wrong. Please try again.</p>';
+  }
+}
+
+async function doExplain(poem, poemText, panel) {
+  const prompt = `You are a literary analyst. Here is a Malayalam poem titled "${poem.title}" by Anusree Othayorath:\n\n${poemText}\n\nIn 4-5 sentences, explain: (1) what the poem is about, (2) its central theme or emotion, (3) any key imagery or metaphors. Write in clear, warm English. No bullet points — flowing prose only.`;
+  const text = await callGemini(prompt);
+  const paras = text.split('\n').filter(p => p.trim()).map(p => `<p>${p.trim()}</p>`).join('');
+  panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Poem Explained</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><div class="ai-result">${paras}</div></div></div>`;
+}
+
+async function doTranslate(poem, poemText, panel) {
+  const nonEmpty = poem.lines.filter(l => l !== '');
+  const prompt = `Translate these Malayalam poem lines to English poetically. Return ONLY a JSON array of translated strings in the same order, nothing else:\n${JSON.stringify(nonEmpty)}`;
+  const raw = await callGemini(prompt);
+  let translations;
+  try {
+    const clean = raw.replace(/```json|```/g, '').trim();
+    translations = JSON.parse(clean);
+  } catch {
+    translations = nonEmpty.map(() => '—');
+  }
+  const rows = nonEmpty.map((orig, i) =>
+    `<div class="ai-translation-line"><span class="ai-orig">${orig}</span><span class="ai-eng">${translations[i] || '—'}</span></div>`
+  ).join('');
+  panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ English Translation</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><div style="display:flex;gap:1rem;margin-bottom:.6rem;font-family:'Space Grotesk',sans-serif;font-size:.62rem;letter-spacing:.15em;color:var(--text-soft);text-transform:uppercase"><span style="flex:1">Malayalam</span><span style="flex:1">English</span></div>${rows}</div></div>`;
+}
+
+function doAsk(poem, poemText, panel) {
+  panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Ask the Poet</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><div class="chat-history" id="chat-history"></div><div class="ask-form"><input id="ask-input" placeholder="Ask Anusree about this poem…" onkeydown="if(event.key==='Enter')sendAsk()" /><button class="ask-send" onclick="sendAsk()">Send ›</button></div></div></div>`;
+  setTimeout(() => document.getElementById('ask-input')?.focus(), 100);
+}
+
+async function sendAsk() {
+  const input = document.getElementById('ask-input');
+  const q = input.value.trim();
+  if (!q) return;
+  const poem = poems.find(p => p.id === currentPoemId);
+  if (!poem) return;
+  const poemText = poem.lines.filter(l => l !== '').join('\n');
+  const history = document.getElementById('chat-history');
+  history.innerHTML += `<div class="chat-q">${q}</div>`;
+  input.value = '';
+  const loadEl = document.createElement('div');
+  loadEl.className = 'chat-a';
+  loadEl.innerHTML = '<div class="ai-spinner" style="width:12px;height:12px;margin:2px 0"></div>';
+  history.appendChild(loadEl);
+  history.scrollTop = history.scrollHeight;
+  const prompt = `You are Anusree Othayorath, a soulful Malayalam poet. A reader is asking about your poem "${poem.title}":\n\n${poemText}\n\nReader's question: "${q}"\n\nAnswer as the poet — personal, warm, introspective. 2-3 sentences max.`;
+  const ans = await callGemini(prompt);
+  loadEl.innerHTML = ans;
+  history.scrollTop = history.scrollHeight;
+}
+
+async function doSimilar(poem, panel) {
+  const allTitles = poems.filter(p => p.id !== poem.id).map(p => `${p.id}: ${p.title}`).join('\n');
+  const prompt = `Here is a Malayalam poem titled "${poem.title}":\n${poem.lines.filter(l=>l!=='').join('\n')}\n\nFrom this list of other poems by the same poet:\n${allTitles}\n\nReturn ONLY a JSON array of the 2-3 most thematically similar poem IDs (just the ids, no explanation):\n["id1","id2"]`;
+  const raw = await callGemini(prompt);
+  let ids;
+  try { ids = JSON.parse(raw.replace(/```json|```/g,'').trim()); } catch { ids = []; }
+  const similar = ids.map(id => poems.find(p => p.id === id)).filter(Boolean);
+  if (!similar.length) {
+    panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Similar Poems</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><p class="ai-result">No closely similar poems found in the collection yet.</p></div></div>`;
+    return;
+  }
+  const items = similar.map(p => `<li class="similar-item" onclick="showPoem('${p.id}')">${p.title}</li>`).join('');
+  panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Similar Poems</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><ul class="similar-list">${items}</ul></div></div>`;
+}
+
+// Auto mood detection when poem opens
+const moodCache = {};
+async function detectMood(poem) {
+  if (moodCache[poem.id]) return moodCache[poem.id];
+  const poemText = poem.lines.filter(l => l !== '').join('\n');
+  const prompt = `Read this Malayalam poem titled "${poem.title}":\n${poemText}\n\nReturn ONLY one word from this list that best describes its primary mood: joy, sadness, love, nature, resilience, memory`;
+  const raw = (await callGemini(prompt)).toLowerCase().trim().replace(/[^a-z]/g,'');
+  const valid = ['joy','sadness','love','nature','resilience','memory'];
+  const mood = valid.find(m => raw.includes(m)) || 'memory';
+  moodCache[poem.id] = mood;
+  return mood;
+}
+
+const moodMeta = {
+  joy:        { label: '✦ Joyful',     cls: 'mood-joy' },
+  sadness:    { label: '✦ Melancholy', cls: 'mood-sad' },
+  love:       { label: '✦ Love',       cls: 'mood-love' },
+  nature:     { label: '✦ Nature',     cls: 'mood-nature' },
+  resilience: { label: '✦ Resilience', cls: 'mood-resilience' },
+  memory:     { label: '✦ Memory',     cls: 'mood-memory' },
+};
+
+async function showMoodBadge(poem) {
+  const badge = document.getElementById('pv-mood');
+  badge.style.display = 'none';
+  const mood = await detectMood(poem);
+  const meta = moodMeta[mood] || moodMeta.memory;
+  badge.className = `mood-badge ${meta.cls}`;
+  badge.textContent = meta.label;
+  badge.style.display = 'inline-flex';
+}
 
 // Init
 fetchLikes().then(()=>{sortedPoems=[...poems].sort((a,b)=>new Date(b.date)-new Date(a.date));renderHome();updateStats();const h=window.location.hash.replace('#','');if(h==='about')showAbout();else if(h)showPoem(h)});
