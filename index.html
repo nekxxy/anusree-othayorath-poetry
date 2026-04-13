@@ -751,11 +751,7 @@ updateOnlineStatus();
 async function callGeminiWithRetry(prompt, retries = 2) {
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: {
-      temperature: 0.3,
-      // Gemini 3.x: MINIMAL thinking = faster, cheaper, still accurate
-      thinkingConfig: { thinkingBudget: 0 }
-    }
+    generationConfig: { temperature: 0.3 }
   };
   for (let i = 0; i <= retries; i++) {
     try {
@@ -769,7 +765,7 @@ async function callGeminiWithRetry(prompt, retries = 2) {
         throw new Error(`HTTP ${res.status}: ${err?.error?.message || 'unknown'}`);
       }
       const d = await res.json();
-      // 🔴 CRITICAL: skip thought parts, find actual response part
+      // Skip thought parts — Gemini 3.x includes internal reasoning before answer
       const parts = d.candidates?.[0]?.content?.parts || [];
       const text = parts.find(p => !p.thought && p.text)?.text
                 || parts[parts.length - 1]?.text;
@@ -778,7 +774,7 @@ async function callGeminiWithRetry(prompt, retries = 2) {
     } catch (e) {
       console.warn(`Gemini attempt ${i + 1} failed:`, e.message);
       if (i === retries) throw e;
-      await new Promise(r => setTimeout(r, 900 * (i + 1)));
+      await new Promise(r => setTimeout(r, 800 * (i + 1)));
     }
   }
 }
