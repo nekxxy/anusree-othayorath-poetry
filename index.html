@@ -843,9 +843,6 @@ function showPoem(id) {
   if (!poem) return showHome();
   currentPoemId = id;
   document.getElementById('pv-title').textContent = poem.title;
-  document.getElementById('pv-date').textContent = fmtDate(poem.date);
-  const catEl = document.getElementById('pv-cat');
-  catEl.textContent = poem.category || ''; catEl.style.display = poem.category ? '' : 'none';
   const body = document.getElementById('pv-body');
   body.innerHTML = '';
   poem.lines.forEach(line => {
