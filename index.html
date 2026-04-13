@@ -1041,11 +1041,11 @@ let activeAiPanel = null;
 function aiLoading(label) {
   return `<div class="ai-panel">
     <div class="ai-panel-header">
-      <span class="ai-panel-title">✦ ${label}</span>
+      <span class="ai-panel-title">✦ ${sanitize(label)}</span>
       <button class="ai-panel-close" onclick="closeAiPanel()">✕</button>
     </div>
     <div class="ai-panel-body">
-      <div class="ai-loading"><div class="ai-spinner"></div><span>Thinking<span class="ai-dots"><span>.</span><span>.</span><span>.</span></span></span></div>
+      <div class="ai-loading"><div class="ai-spinner"></div><span>AI is working<span class="ai-dots"><span>.</span><span>.</span><span>.</span></span></span></div>
     </div>
   </div>`;
 }
