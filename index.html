@@ -76,6 +76,22 @@
 
     .page { position: relative; z-index: 2; }
 
+    /* Logo */
+    .site-logo {
+      width: 130px;
+      height: 130px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 1.5rem;
+      animation: fadeSlideDown 1s ease both;
+      filter: drop-shadow(0 0 18px rgba(201,151,58,0.25));
+      transition: filter 0.3s, transform 0.3s;
+    }
+    .site-logo:hover {
+      filter: drop-shadow(0 0 28px rgba(201,151,58,0.45));
+      transform: scale(1.04);
+    }
+
     /* Header */
     header {
       text-align: center;
@@ -384,6 +400,16 @@
     .poem-signature.revealed { opacity: 1; }
 
     /* About */
+    .about-logo {
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 1.5rem;
+      filter: drop-shadow(0 0 14px rgba(201,151,58,0.2));
+      opacity: 0.9;
+    }
+
     .about-wrap {
       text-align: center;
       max-width: 520px;
@@ -475,6 +501,7 @@
 <div class="page">
   <header>
     <div class="header-glow"></div>
+    <img src="logo.png" class="site-logo" onclick="showHome()" alt="Anusree Othayorath Poetry Logo" style="cursor:none" />
     <h1 class="site-name" onclick="showHome()" style="cursor:none">അനുശ്രീ ഒതയോരത്ത്</h1>
     <span class="site-name-en">Anusree Othayorath</span>
     <div class="header-line"></div>
@@ -514,6 +541,7 @@
 
     <div id="about-view" class="view">
       <div class="about-wrap">
+        <img src="logo.png" class="about-logo" alt="logo" />
         <div class="about-avatar">
           <img src="profile.png" alt="അനുശ്രീ ഒതയോരത്ത്" />
         </div>
