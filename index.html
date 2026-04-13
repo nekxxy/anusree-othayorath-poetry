@@ -598,10 +598,6 @@
         തിരിച്ചു പോകുക
       </button>
       <h2 class="poem-view-title" id="pv-title"></h2>
-      <div class="poem-view-meta">
-        <span class="poem-cat" id="pv-cat"></span>
-        <span class="poem-date-sm" id="pv-date"></span>
-      </div>
       <div class="poem-divider"><div class="poem-divider-dot"></div></div>
       <div class="poem-body" id="pv-body"></div>
       <p class="poem-signature" id="pv-sig">~ Anusree Othayorath ~</p>
@@ -818,10 +814,6 @@ function renderHome() {
       <span class="poem-num">0${i+1}</span>
       <div class="poem-card-body">
         <span class="poem-title-ml">${poem.title}</span>
-        <div class="poem-card-meta">
-          ${poem.category ? `<span class="poem-cat">${poem.category}</span>` : ''}
-          <span class="poem-date-sm">${fmtDate(poem.date)}</span>
-        </div>
       </div>
       <button class="like-btn${liked ? ' liked' : ''}" id="like-card-${poem.id}"
         onclick="event.stopPropagation(); handleLike('${poem.id}', this)">
