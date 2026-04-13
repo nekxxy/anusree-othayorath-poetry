@@ -382,7 +382,7 @@ function showRandom(){if(!poems.length)return;showPoem(poems[Math.floor(Math.ran
 
 // Views
 function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo({top:0,behavior:'smooth'});progressBar.style.display=id==='poem-view'?'block':'none';if(id!=='poem-view')progressBar.style.width='0%'}
-function showHome(){showView('home-view');setNav('poems');window.location.hash='';document.getElementById('search-input').value='';renderHome()}
+function showHome(){showView('home-view');setNav('poems');history.replaceState(null,'',location.pathname);document.getElementById('search-input').value='';renderHome()}
 function showPoem(id){
   const poem=poems.find(p=>p.id===id);if(!poem)return showHome();
   currentPoemId=id;
@@ -565,7 +565,14 @@ async function showMoodBadge(poem) {
 }
 
 // Init
-fetchLikes().then(()=>{sortedPoems=[...poems].sort((a,b)=>new Date(b.date)-new Date(a.date));renderHome();updateStats();const h=window.location.hash.replace('#','');if(h==='about')showAbout();else if(h)showPoem(h)});
+fetchLikes().then(()=>{
+  sortedPoems=[...poems].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  updateStats();
+  const h=window.location.hash.replace('#','');
+  if(h==='about') showAbout();
+  else if(h && poems.find(p=>p.id===h)) showPoem(h);
+  else { renderHome(); }
+});
 </script>
 </body>
 </html>
