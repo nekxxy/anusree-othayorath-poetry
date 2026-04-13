@@ -1027,8 +1027,9 @@ function showAbout(){showView('about-view');setNav('about');window.location.hash
 
 // ── Gemini AI ────────────────────────────────────────────────
 const GEMINI_KEY = 'AIzaSyBR4gpF8hNarAtaVMk8g6xrGHMIGolyJq0';
-// 🚀 Performance Agent: upgraded to gemini-2.5-flash (fastest, best quality)
-const GEMINI_MODEL = 'gemini-2.5-flash';
+// 🚀 Performance Agent: upgraded to gemini-3.1-flash-lite-preview
+// 2.5x faster than 2.5-flash, optimized for translation, free tier available
+const GEMINI_MODEL = 'gemini-3.1-flash-lite-preview';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
 // JSON mode URL — forces structured JSON output, no markdown wrapping
 const GEMINI_URL_JSON = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
