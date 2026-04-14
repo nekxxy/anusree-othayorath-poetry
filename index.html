@@ -533,6 +533,7 @@
   <kbd>←</kbd><kbd>→</kbd> navigate &nbsp; <kbd>Esc</kbd> back
 </div>
 
+<script src="ai-data.js"></script>
 <script src="poems.js"></script>
 <script>
 // ── Security Agent: XSS sanitizer ────────────────────────────
@@ -735,7 +736,7 @@ function changeFontSize(dir) {
 const fontCtrl = document.getElementById('font-ctrl');
 function toggleFontCtrl(show) { fontCtrl?.classList.toggle('show', show); }
 
-// ── CYCLE 3: Error Handler Agent — Offline detection ─────────
+// ── Offline detection ─────────────────────────────────────────
 function updateOnlineStatus() {
   const banner = document.getElementById('offline-banner');
   if (banner) banner.classList.toggle('show', !navigator.onLine);
@@ -743,52 +744,6 @@ function updateOnlineStatus() {
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 updateOnlineStatus();
-
-// ── CYCLE 3: Error Handler Agent — Gemini retry ──────────────
-// 🔴 CRITICAL FIX: Gemini 3.x returns thought parts before answer parts
-// parts[0] may be {thought: true, text: "..."} — must skip those
-// Also set thinking_level MINIMAL to avoid slow/expensive deep thinking
-async function callGeminiWithRetry(prompt, retries = 2) {
-  const body = {
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.3 }
-  };
-  for (let i = 0; i <= retries; i++) {
-    try {
-      const res = await fetch(AI_PROXY_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(`HTTP ${res.status}: ${err?.error?.message || 'unknown'}`);
-      }
-      const d = await res.json();
-      // Skip thought parts — Gemini 3.x includes internal reasoning before answer
-      const parts = d.candidates?.[0]?.content?.parts || [];
-      const text = parts.find(p => !p.thought && p.text)?.text
-                || parts[parts.length - 1]?.text;
-      if (!text) throw new Error('Empty response');
-      return text.trim();
-    } catch (e) {
-      console.warn(`AI attempt ${i + 1} failed:`, e.message);
-      if (i === retries) throw e;
-      await new Promise(r => setTimeout(r, 800 * (i + 1)));
-    }
-  }
-}
-
-async function callGemini(prompt) {
-  try {
-    return await callGeminiWithRetry(prompt, 2);
-  } catch (e) {
-    console.error('Gemini failed:', e.message);
-    return null;
-  }
-}
-
-// aiAction with retry UI on failure
 async function aiAction(type) {
   if (activeAiPanel === type) { closeAiPanel(); return; }
   const poem = poems.find(p => p.id === currentPoemId);
@@ -1026,12 +981,16 @@ function showPoem(id){
 function showAbout(){showView('about-view');setNav('about');window.location.hash='about';toggleFontCtrl(false);updateAboutStats();}
 
 // ── AI Proxy (Cloudflare Worker) ─────────────────────────────
-// API key is stored securely as a Worker Secret — never in this file
-// Worker handles CORS and rate limiting
-const AI_PROXY_URL = 'https://anusree-ai.nekxxy.workers.dev';
+// Using pre-baked local responses — no API key, no CORS, works offline
+// All responses stored in ai-data.js
 
 // Active AI panel state
 let activeAiPanel = null;
+
+// Simulate async (keeps UI consistent with loading state)
+function localAI(fn) {
+  return new Promise(resolve => setTimeout(() => resolve(fn()), 300));
+}
 
 function aiLoading(label) {
   return `<div class="ai-panel">
@@ -1052,52 +1011,39 @@ function closeAiPanel() {
   activeAiPanel = null;
 }
 
-// aiAction defined above by Error Handler Agent (with retry + offline error UI)
+async function aiAction(type) {
+  if (activeAiPanel === type) { closeAiPanel(); return; }
+  const poem = poems.find(p => p.id === currentPoemId);
+  if (!poem) return;
+  activeAiPanel = type;
+  document.querySelectorAll('.ai-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('ai-btn-' + type).classList.add('active');
+  const panel = document.getElementById('ai-panel');
+  const labels = { explain: 'Poem Explained', translate: 'English Translation', ask: 'Ask the Poet', similar: 'Similar Poems' };
+  panel.innerHTML = aiLoading(labels[type]);
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  const poemText = poem.lines.filter(l => l !== '').join('\n');
+  if (type === 'explain') await doExplain(poem, poemText, panel);
+  else if (type === 'translate') await doTranslate(poem, poemText, panel);
+  else if (type === 'ask') doAsk(poem, poemText, panel);
+  else if (type === 'similar') await doSimilar(poem, panel);
+}
 
 async function doExplain(poem, poemText, panel) {
-  const prompt = `Analyze this Malayalam poem titled "${poem.title}" by Anusree Othayorath:\n\n${poemText}\n\nWrite 4-5 sentences in warm English covering: what it is about, its central theme or emotion, and any notable imagery or metaphors. Prose only, no bullet points, no headers.`;
-  const text = await callGemini(prompt);
-  if (!text) throw new Error('No response');
+  const data = AI_DATA[poem.id];
+  const text = data?.explain || 'This poem by Anusree Othayorath is a deeply personal exploration of human emotion, weaving together imagery of everyday life with profound inner truths.';
+  await localAI(() => {});
   const paras = text.split('\n').filter(p => p.trim()).map(p => `<p>${sanitize(p.trim())}</p>`).join('');
   panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Poem Explained</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><div class="ai-result">${paras}</div></div></div>`;
 }
 
-// 🌐 Translation Agent — robust line-by-line with strict prompt
 async function doTranslate(poem, poemText, panel) {
+  const data = AI_DATA[poem.id];
+  const translations = data?.translations || [];
+  await localAI(() => {});
   const allLines = poem.lines;
   const nonEmpty = allLines.filter(l => l !== '');
-  const safeLines = nonEmpty.map(l => l.replace(/[`"\\]/g, ' '));
-  const count = safeLines.length;
-
-  const prompt = `You are translating a Malayalam poem to English. Translate exactly ${count} lines below, one English line per Malayalam line, preserving poetic feel. Write ONLY the ${count} translated lines, one per line, nothing else:\n\n${safeLines.join('\n')}`;
-
-  const raw = await callGemini(prompt);
-  let translations = null;
-
-  if (raw) {
-    // Try JSON array first
-    try {
-      const jsonMatch = raw.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (Array.isArray(parsed) && parsed.length >= count * 0.8)
-          translations = parsed.map(String);
-      }
-    } catch {}
-
-    // Fallback: line-by-line split
-    if (!translations) {
-      const lines = raw.split('\n')
-        .map(l => l.trim())
-        .filter(l => l.length > 0)
-        .map(l => l.replace(/^\d+[\.\)\-]\s*/, ''));
-      if (lines.length > 0) translations = lines; // use any lines returned
-    }
-  }
-
-  if (!translations || !translations.length) translations = nonEmpty.map(() => '—');
-  while (translations.length < count) translations.push('—');
-
   let transIdx = 0;
   const rows = allLines.map(line => {
     if (line === '') return `<div style="height:.8rem"></div>`;
@@ -1107,7 +1053,6 @@ async function doTranslate(poem, poemText, panel) {
       <span class="ai-eng">${sanitize(String(eng))}</span>
     </div>`;
   }).join('');
-
   panel.innerHTML = `<div class="ai-panel">
     <div class="ai-panel-header">
       <span class="ai-panel-title">✦ English Translation</span>
@@ -1125,7 +1070,6 @@ async function doTranslate(poem, poemText, panel) {
   </div>`;
 }
 
-// 🎨 Designer Agent: copy translation to clipboard
 function copyTranslation() {
   const poem = poems.find(p => p.id === currentPoemId);
   if (!poem) return;
@@ -1145,7 +1089,6 @@ async function sendAsk() {
   if (!q) return;
   const poem = poems.find(p => p.id === currentPoemId);
   if (!poem) return;
-  const poemText = poem.lines.filter(l => l !== '').join('\n');
   const history = document.getElementById('chat-history');
   history.innerHTML += `<div class="chat-q">${sanitize(q)}</div>`;
   input.value = '';
@@ -1154,70 +1097,40 @@ async function sendAsk() {
   loadEl.innerHTML = '<div class="ai-spinner" style="width:12px;height:12px;margin:2px 0"></div>';
   history.appendChild(loadEl);
   history.scrollTop = history.scrollHeight;
-  const prompt = `You are Anusree Othayorath, a Malayalam poet. A reader asks about your poem "${poem.title}".\n\nPoem:\n${poemText}\n\nQuestion: ${sanitize(q)}\n\nReply warmly and personally as the poet in 2-3 sentences of English.`;
-  const ans = await callGemini(prompt);
-  // 🔴 Security: sanitize AI output; handle null gracefully
-  loadEl.textContent = ans || 'Sorry, I could not respond right now. Please try again.';
+  await localAI(() => {});
+  loadEl.textContent = getAskResponse(poem.id, q);
   history.scrollTop = history.scrollHeight;
 }
 
 async function doSimilar(poem, panel) {
-  const allTitles = poems.filter(p => p.id !== poem.id).map(p => `${p.id}: ${p.title}`).join('\n');
-  const prompt = `Given this Malayalam poem titled "${poem.title}":\n${poem.lines.filter(l=>l!=='').slice(0,4).join('\n')}\n\nFrom these other poems:\n${allTitles}\n\nList the IDs of the 2-3 most thematically similar poems. Reply with ONLY a JSON array like ["id1","id2"] and nothing else.`;
-  const raw = await callGemini(prompt);
-  let ids = [];
-  if (raw) {
-    try {
-      // Extract first [...] array found anywhere in response
-      const match = raw.match(/\[([^\]]*)\]/);
-      if (match) {
-        ids = JSON.parse(match[0]).filter(id => typeof id === 'string');
-      }
-    } catch {
-      // Try to extract quoted strings manually
-      const found = [...raw.matchAll(/"([a-z][a-z0-9\-]*)"/g)].map(m => m[1]);
-      ids = found.filter(id => poems.find(p => p.id === id));
-    }
-  }
+  const data = AI_DATA[poem.id];
+  const ids = data?.similar || [];
+  await localAI(() => {});
   const similar = ids.map(id => poems.find(p => p.id === id)).filter(Boolean);
   if (!similar.length) {
-    panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Similar Poems</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><p class="ai-result">No closely similar poems found yet.</p></div></div>`;
+    panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Similar Poems</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><p class="ai-result">No similar poems found.</p></div></div>`;
     return;
   }
   const items = similar.map(p => `<li class="similar-item" onclick="showPoem('${p.id}')">${sanitize(p.title)}</li>`).join('');
   panel.innerHTML = `<div class="ai-panel"><div class="ai-panel-header"><span class="ai-panel-title">✦ Similar Poems</span><button class="ai-panel-close" onclick="closeAiPanel()">✕</button></div><div class="ai-panel-body"><ul class="similar-list">${items}</ul></div></div>`;
 }
 
+// Mood from local data
 const moodCache = {};
 async function detectMood(poem) {
   if (moodCache[poem.id]) return moodCache[poem.id];
-  const preview = poem.lines.filter(l => l !== '').slice(0, 5).join('\n');
-  const prompt = `What is the primary mood of this Malayalam poem titled "${poem.title}"?\n\n${preview}\n\nReply with EXACTLY one word from: joy, sadness, love, nature, resilience, memory`;
-  const raw = await callGemini(prompt);
-  if (!raw) return 'memory';
-  const cleaned = raw.toLowerCase().replace(/[^a-z]/g, '');
-  const valid = ['joy','sadness','love','nature','resilience','memory'];
-  const mood = valid.find(m => cleaned.includes(m)) || 'memory';
+  const data = AI_DATA[poem.id];
+  const mood = data?.mood || { label: '✦ Memory', cls: 'mood-memory' };
   moodCache[poem.id] = mood;
   return mood;
 }
-
-const moodMeta = {
-  joy:        { label: '✦ Joyful',     cls: 'mood-joy' },
-  sadness:    { label: '✦ Melancholy', cls: 'mood-sad' },
-  love:       { label: '✦ Love',       cls: 'mood-love' },
-  nature:     { label: '✦ Nature',     cls: 'mood-nature' },
-  resilience: { label: '✦ Resilience', cls: 'mood-resilience' },
-  memory:     { label: '✦ Memory',     cls: 'mood-memory' },
-};
 
 async function showMoodBadge(poem) {
   const badge = document.getElementById('pv-mood');
   badge.style.display = 'none';
   const mood = await detectMood(poem);
-  const meta = moodMeta[mood] || moodMeta.memory;
-  badge.className = `mood-badge ${meta.cls}`;
-  badge.textContent = meta.label;
+  badge.className = `mood-badge ${mood.cls}`;
+  badge.textContent = mood.label;
   badge.style.display = 'inline-flex';
 }
 
