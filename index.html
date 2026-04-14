@@ -755,7 +755,7 @@ async function callGeminiWithRetry(prompt, retries = 2) {
   };
   for (let i = 0; i <= retries; i++) {
     try {
-      const res = await fetch(GEMINI_URL, {
+      const res = await fetch(AI_PROXY_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -772,7 +772,7 @@ async function callGeminiWithRetry(prompt, retries = 2) {
       if (!text) throw new Error('Empty response');
       return text.trim();
     } catch (e) {
-      console.warn(`Gemini attempt ${i + 1} failed:`, e.message);
+      console.warn(`AI attempt ${i + 1} failed:`, e.message);
       if (i === retries) throw e;
       await new Promise(r => setTimeout(r, 800 * (i + 1)));
     }
@@ -1025,11 +1025,10 @@ function showPoem(id){
 }
 function showAbout(){showView('about-view');setNav('about');window.location.hash='about';toggleFontCtrl(false);updateAboutStats();}
 
-// ── Gemini AI ────────────────────────────────────────────────
-const GEMINI_KEY = 'AIzaSyBR4gpF8hNarAtaVMk8g6xrGHMIGolyJq0';
-// gemini-3.1-flash-lite-preview: 2.5x faster, optimized for translation
-const GEMINI_MODEL = 'gemini-3.1-flash-lite-preview';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
+// ── AI Proxy (Cloudflare Worker) ─────────────────────────────
+// API key is stored securely as a Worker Secret — never in this file
+// Worker handles CORS and rate limiting
+const AI_PROXY_URL = 'https://anusree-ai.nekxxy.workers.dev';
 
 // Active AI panel state
 let activeAiPanel = null;
